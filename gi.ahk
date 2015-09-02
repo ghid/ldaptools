@@ -34,21 +34,21 @@ Main:
 
 	rc := 0
 
-	op := new OptParser("gi [-a <dateiname> | -o <dateiname>] [options] <cn> [filter]")
-	op.Add(new OptParser.String("a", "append", G_append, "file-name", "An vorhandene Datei anhängen"))
-	op.Add(new OptParser.String("o", "", G_output, "file-name", "In Datei ausgeben"))
+	op := new OptParser("gi [-a <filename> | -o <filename>] [options] <cn> [filter]")
+	op.Add(new OptParser.String("a", "append", G_append, "file-name", "Append result to existing file"))
+	op.Add(new OptParser.String("o", "", G_output, "file-name", "Write result to file"))
 	op.Add(new OptParser.Group("`nOptions"))
-	op.Add(new OptParser.Boolean("1", "short", G_short, "Nur Gruppenname ausgeben anstelle des DN"))
-	op.Add(new OptParser.Boolean("c", "count", G_count, "Anzahl Treffer ausgeben"))
-	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Verwendet einen regulären Ausdruck zum filtern des Ergebnisses (siehe auch http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
-	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname des LDAP-Servers (default=" G_host ")",, G_host, G_host))
-	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Ergebnis in Kleinbuchstaben ausgeben"))
-	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Ergebnis in Großbuchstaben ausgeben"))
-	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Beziehungen ausgeben"))
-	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Ergebnis sortiert ausgeben"))
-	op.Add(new OptParser.Boolean(0, "color", G_color, "Farbige Textausgabe (wird bei -a oder -o standardmäßig deaktiviert)",OptParser.OPT_NEG, -1, true))
-	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Nur Einträge mit objectClass ibm-nestedGroup berücksichtigen"))
-	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Legt fest, ab welcher Rekursionstiefe die Verarbeitung abbricht",, G_max_nested_lv, G_max_nested_lv))
+	op.Add(new OptParser.Boolean("1", "short", G_short, "Display group names instead of the DN"))
+	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
+	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set(see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
+	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
+	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Display result in lower case characters"))
+	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Display result in upper case characters"))
+	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Display group relations"))
+	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Sort result"))
+	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG, -1, true))
+	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only show groups which implement objectclass ibm-nestedGroup"))
+	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process",, G_max_nested_lv, G_max_nested_lv))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean(0, "help", G_help, "Print help", OptParser.OPT_HIDDEN))
 
@@ -335,3 +335,4 @@ ldap_get_dn(ldapFilter) {
 	return _log.Exit(G_LDAP_CONN.GetDn(entry))
 }
 
+; vim: ts=4:sts=4:sw=4:tw=0:noet
