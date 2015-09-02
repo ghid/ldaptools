@@ -23,14 +23,13 @@ SendMode Input
 Main:
 	_main := new Logger("app.gi.Main")
 	
-	global G_lower, G_upper, G_short, G_verbose, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color
+	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32
 
 	global G_LDAP_CONN := 0
 
 	global G_dn, G_cn, G_filter := "*"
 	global G_member_list := []
 	global G_scanned_group := []
-	global G_ref := []
 	global G_out_file_name := ""
 
 	rc := 0
@@ -40,15 +39,16 @@ Main:
 	op.Add(new OptParser.String("o", "", G_output, "file-name", "In Datei ausgeben"))
 	op.Add(new OptParser.Group("`nOptions"))
 	op.Add(new OptParser.Boolean("1", "short", G_short, "Nur Gruppenname ausgeben anstelle des DN"))
+	op.Add(new OptParser.Boolean("c", "count", G_count, "Anzahl Treffer ausgeben"))
 	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Verwendet einen regulären Ausdruck zum filtern des Ergebnisses (siehe auch http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
 	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname des LDAP-Servers (default=" G_host ")",, G_host, G_host))
 	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Ergebnis in Kleinbuchstaben ausgeben"))
 	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Ergebnis in Großbuchstaben ausgeben"))
-	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Referenzen auflisten"))
+	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Beziehungen ausgeben"))
 	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Ergebnis sortiert ausgeben"))
-	op.Add(new OptParser.Boolean(0, "color", G_color, "Farbige Textausgabe (wird bei -a oder -o deaktiviert)",OptParser.OPT_NEG, -1, true))
-	op.Add(new OptParser.Boolean("v", "verbose", G_verbose, "Verarbeitungsprotokoll ausgeben"))
+	op.Add(new OptParser.Boolean(0, "color", G_color, "Farbige Textausgabe (wird bei -a oder -o standardmäßig deaktiviert)",OptParser.OPT_NEG, -1, true))
 	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Nur Einträge mit objectClass ibm-nestedGroup berücksichtigen"))
+	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Legt fest, ab welcher Rekursionstiefe die Verarbeitung abbricht",, G_max_nested_lv, G_max_nested_lv))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean(0, "help", G_help, "Print help", OptParser.OPT_HIDDEN))
 
@@ -56,6 +56,7 @@ Main:
 		args := op.Parse(System.vArgs)
 
 		if (_main.Logs(Logger.Finest)) {
+			_main.Finest("G_count", G_count)
 			_main.Finest("G_refs", G_refs)
 			_main.Finest("G_short", G_short)
 			_main.Finest("G_append", G_append)
@@ -66,8 +67,8 @@ Main:
 			_main.Finest("G_lower", G_lower)
 			_main.Finest("G_upper", G_upper)
 			_main.Finest("G_sort", G_sort)
-			_main.Finest("G_verbose", G_verbose)
 			_main.Finest("G_ibm", G_ibm)
+			_main.Finest("G_max_nested_lv", G_max_nested_lv)
 			_main.Finest("G_version", G_version)
 			_main.Finest("G_help", G_help)
 		}
@@ -86,8 +87,14 @@ Main:
 		; 	throw Exception("error: Invalid argument(s)",, -2)
 		}
 
+		OptParser.TrimArg(G_max_nested_lv)
 		OptParser.TrimArg(G_output)
 		OptParser.TrimArg(G_append)
+		if (_main.Logs(Logger.Finest)) {
+			_main.Finest("G_append", G_append)
+			_main.Finest("G_output", G_output)
+			_main.Finest("G_max_nested_lv", G_max_nested_lv)
+		}
 		if (G_output && G_append) {
 			throw Exception("error: Options '-o' and '-a' cannot be used together",, -3)
 		}
@@ -101,18 +108,6 @@ Main:
 			G_filter := args[2]
 
 		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_host", G_host)
-			_main.Finest("G_lower", G_lower)
-			_main.Finest("G_upper", G_upper)
-			_main.Finest("G_short", G_short)
-			_main.Finest("G_verbose", G_verbose)
-			_main.Finest("G_output", G_output)
-			_main.Finest("G_append", G_append)
-			_main.Finest("G_sort", G_sort)
-			_main.Finest("G_regex", G_regex)
-			_main.Finest("G_ibm", G_ibm)
-			_main.Finest("G_version", G_version)
-			_main.Finest("G_help", G_help)
 			_main.Finest("G_cn", G_cn)
 			_main.Finest("G_filter", G_filter)
 		}
@@ -145,25 +140,7 @@ Main:
 			_main.Finest("dn", dn)
 		}
 		Ansi.WriteLine(dn, true)
-		get_member_list(dn)
-		i := 1
-		rc := 0
-		while (i <= G_member_list.MaxIndex()) {
-			group := G_member_list[i]
-			_main.Info("Scanning #" i " " group)
-			if (_main.Logs(Logger.Finest)) {
-				_main.Finest("G_member_list.MaxIndex()", G_member_list.MaxIndex())
-				_main.Finest("i", i)
-				_main.Finest("group", group)
-			}
-			if (G_refs || !G_scanned_group[group]) {
-				G_scanned_group[group] := 1
-				if (output(format_output(group)))
-					rc++
-				get_member_list(group)
-			}
-			i++
-		}
+		rc := ldap_get_group_list(dn)	
 
 		; Handle sort and/or output options
 		; ---------------------------------
@@ -204,6 +181,8 @@ Main:
 			FileAppend %content%, %file_name%
 		content := ""
 
+		if (G_count)
+			Ansi.WriteLine("`n" rc " Treffer")
 	} catch _ex {
 		if (_main.Logs(Logger.Info)) {
 			_main.Info("_ex", _ex)
@@ -221,16 +200,15 @@ Main:
 	
 exitapp	_main.Exit(rc)
 
-format_output(text) {
+format_output(text, ref) {
 	_log := new Logger("app.gi." A_ThisFunc)
 	
 	if (_log.Logs(Logger.Input)) {
 		_log.Input("text", text)
-		_log.Finest("ref", ref)
+		_log.Input("ref", ref)
 	}
 
 	if (G_refs) {
-		ref := G_ref[text]
 		if (G_short)
 			if (RegExMatch(ref, "^.*?=(.*?),.*$", $))
 				ref := $1
@@ -283,6 +261,58 @@ output(text) {
 	return _log.Exit(res)
 }
 
+ldap_get_group_list(memberdn) {
+	_log := new Logger("app.gi." A_ThisFunc)
+
+	static n := 0
+	static l := 0
+	static group_list := []
+	
+	if (_log.Logs(Logger.Input)) {
+		_log.Input("memberdn", memberdn)
+	}
+
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("l", l)
+	}
+
+	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
+	iCount := G_LDAP_CONN.CountEntries()
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("iCount", iCount)
+	}
+	loop %iCount% {
+		if (A_Index = 1)
+			member := G_LDAP_CONN.FirstEntry()
+		else
+			member := G_LDAP_CONN.NextEntry(member)
+		dn := G_LDAP_CONN.GetDn(member)
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("A_Index", A_Index)
+			_log.Finest("member", member)
+			_log.Finest("dn", dn)
+		}
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("group_list[dn]", group_list[dn])
+		}
+		if (group_list[dn] = "" || G_refs) {
+			if (output(format_output(dn, memberdn)))
+				n++
+			group_list[dn] := 1
+		}
+		l++
+		if (l>G_max_nested_lv) {
+			_log.Finest("dn", dn)
+			_log.Finest("memberdn", memberdn)
+			throw _log.Exit(Exception("error: Cyclic reference detected: `n`t" dn "`n`t<- " memberdn,, -5))
+		}
+		ldap_get_group_list(dn)
+		l--
+	}
+	
+	return _log.Exit(n)
+}
+
 ldap_get_dn(ldapFilter) {
 	_log := new Logger("app.gi." A_ThisFunc)
 	
@@ -305,27 +335,3 @@ ldap_get_dn(ldapFilter) {
 	return _log.Exit(G_LDAP_CONN.GetDn(entry))
 }
 
-get_member_list(memberdn) {
-	_log := new Logger("app.gi." A_ThisFunc)
-	
-	if (_log.Logs(Logger.Input)) {
-		_log.Input("memberdn", memberdn)
-	}
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
-	iCount := G_LDAP_CONN.CountEntries()
-	if (_log.Logs(Logger.Finest)) {
-		_log.Finest("iCount", iCount)
-	}
-	loop %iCount% {
-		if (A_Index = 1)
-			entry := G_LDAP_CONN.FirstEntry()
-		else
-			entry := G_LDAP_CONN.NextEntry(entry)
-		dn := G_LDAP_CONN.GetDn(entry)
-		if (G_refs)
-			G_ref[dn] := memberdn
-		G_member_list.Insert(dn)
-	}
-
-	return _log.Exit()
-}
