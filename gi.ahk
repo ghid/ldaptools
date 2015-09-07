@@ -34,21 +34,22 @@ Main:
 
 	rc := 0
 
-	op := new OptParser("gi [-a <filename> | -o <filename>] [options] <cn> [filter]")
+	op := new OptParser("gi [-a <filename> | -o <filename>] [options] <cn> [filter]",, "GI_OPTIONS")
 	op.Add(new OptParser.String("a", "append", G_append, "file-name", "Append result to existing file"))
 	op.Add(new OptParser.String("o", "", G_output, "file-name", "Write result to file"))
 	op.Add(new OptParser.Group("`nOptions"))
 	op.Add(new OptParser.Boolean("1", "short", G_short, "Display group names instead of the DN"))
 	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
-	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set(see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
+	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set (see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
 	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
 	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Display result in lower case characters"))
 	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Display result in upper case characters"))
 	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Display group relations"))
 	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Sort result"))
-	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG, -1, true))
+	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
 	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only show groups which implement objectclass ibm-nestedGroup"))
-	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process",, G_max_nested_lv, G_max_nested_lv))
+	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process (default=32)",, G_max_nested_lv, G_max_nested_lv))
+	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GI_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean(0, "help", G_help, "Print help", OptParser.OPT_HIDDEN))
 
@@ -182,7 +183,7 @@ Main:
 		content := ""
 
 		if (G_count)
-			Ansi.WriteLine("`n" rc " Treffer")
+			Ansi.WriteLine("`n" rc " Hit(s)")
 	} catch _ex {
 		if (_main.Logs(Logger.Info)) {
 			_main.Info("_ex", _ex)
