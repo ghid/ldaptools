@@ -254,7 +254,7 @@ output(text) {
 	try {
 		if (res := text.Filter(G_filter, G_regex))
 			if (G_out_h)
-				G_out_h.WriteLine("   " text)
+				G_out_h.WriteLine(text)
 			else
 				Ansi.WriteLine("   " text, true)
 	} catch _ex {
@@ -321,7 +321,7 @@ ldap_get_user_list(groupcn) {
 							l--
 						} else {
 							if (user_list[$] = "" || G_refs) {
-								if (output(format_output($, ldap_get_dn("cn=" groupcn))))
+								if (output(format_output($, (G_short ? groupcn : ldap_get_dn("cn=" groupcn)))))
 									n++
 								user_list[$] := 1
 							}

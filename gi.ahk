@@ -254,7 +254,7 @@ output(text) {
 	try {
 		if (res := text.Filter(G_filter, G_regex))
 			if (G_out_h)
-				G_out_h.WriteLine("   " text)
+				G_out_h.WriteLine(text)
 			else
 				Ansi.WriteLine("   " text, true)
 	} catch _ex {
