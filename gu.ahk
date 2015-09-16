@@ -56,7 +56,7 @@ Main:
 	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
 	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only chase groups which implement objectclass ibm-nestedGroup"))
 	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process (default=32)",, G_max_nested_lv, G_max_nested_lv))
-	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GI_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GU_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean(0, "help", G_help, "Print help", OptParser.OPT_HIDDEN))
 
