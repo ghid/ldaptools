@@ -145,7 +145,7 @@ Main:
 		if (_main.Logs(Logger.Finest)) {
 			_main.Finest("dn", dn)
 		}
-		Ansi.WriteLine(dn, true)
+		Ansi.WriteLine(format_output(dn, ""), true)
 		rc := ldap_get_group_list(dn)	
 
 		; Handle sort and/or output options
@@ -254,7 +254,7 @@ output(text) {
 	try {
 		if (res := text.Filter(G_filter, G_regex))
 			if (G_out_h)
-				G_out_h.WriteLine(text)
+				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
 			else
 				Ansi.WriteLine("   " text, true)
 	} catch _ex {

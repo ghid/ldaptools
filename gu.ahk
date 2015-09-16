@@ -146,6 +146,7 @@ Main:
 			; _main.Finest("dn", dn)
 		; }
 		; Ansi.WriteLine(dn, true)
+		Ansi.WriteLine(format_output(ldap_get_dn("cn=" args[1]), ""))
 		rc := ldap_get_user_list(args[1])	
 
 		; Handle sort and/or output options
@@ -254,7 +255,7 @@ output(text) {
 	try {
 		if (res := text.Filter(G_filter, G_regex))
 			if (G_out_h)
-				G_out_h.WriteLine(text)
+				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
 			else
 				Ansi.WriteLine("   " text, true)
 	} catch _ex {
