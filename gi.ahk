@@ -234,7 +234,7 @@ format_output(text, ref) {
 
 	if (G_color) {
 		text := RegExReplace(text, "(?P<attr>\w+=)", Ansi.SetGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD) "${attr}" Ansi.SetGraphic(Ansi.ATTR_OFF))
-		if (G_refs)
+		if (G_refs && ref <> "")
 			ref := Ansi.SetGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD) "  <-(" RegExReplace(ref, "(?P<attr>\w+=)", Ansi.SetGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD) "${attr}" Ansi.SetGraphic(Ansi.ATTR_OFF)) Ansi.SetGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD) ")" Ansi.SetGraphic(Ansi.ATTR_OFF)
 	} else
 		if (G_refs)
