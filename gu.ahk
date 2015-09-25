@@ -23,7 +23,7 @@ SendMode Input
 Main:
 	_main := new Logger("app.gu.Main")
 	
-	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32
+	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1
 
 	global G_LDAP_CONN := 0
 
@@ -49,6 +49,7 @@ Main:
 	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
 	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set (see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
 	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
+	op.Add(new OptParser.Boolean("i", "ignore-case", G_ignore_case, "Ignore case when filtering results", OptParser.OPT_NEG, G_ignore_case, G_ignore_case))
 	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Display result in lower case characters"))
 	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Display result in upper case characters"))
 	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Display relations"))
@@ -70,6 +71,7 @@ Main:
 			_main.Finest("G_append", G_append)
 			_main.Finest("G_output", G_output)
 			_main.Finest("G_host", G_host)
+			_main.Finest("G_ignore_case", G_ignore_case)
 			_main.Finest("G_color", G_color)
 			_main.Finest("G_regex", G_regex)
 			_main.Finest("G_lower", G_lower)
@@ -253,7 +255,7 @@ output(text) {
 
 	res := true
 	try {
-		if (res := text.Filter(G_filter, G_regex))
+		if (res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
 			if (G_out_h)
 				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
 			else
