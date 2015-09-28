@@ -1,1 +1,1 @@
-G_VERSION_INFO := {NAME: "AHK ldaptools/gu version 1.0.1", ARCH: "x64", BUILD: "20150925_135858"}
+G_VERSION_INFO := {NAME: "AHK ldaptools/gu version 1.0.2", ARCH: "x64", BUILD: "20150928_153637"}

@@ -23,7 +23,7 @@ SendMode Input
 Main:
 	_main := new Logger("app.gu.Main")
 	
-	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1
+	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet
 
 	global G_LDAP_CONN := 0
 
@@ -58,6 +58,7 @@ Main:
 	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only chase groups which implement objectclass ibm-nestedGroup"))
 	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process (default=32)",, G_max_nested_lv, G_max_nested_lv))
 	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GU_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean("q", "quiet", G_quiet, "Suppress output of results"))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean(0, "help", G_help, "Print help", OptParser.OPT_HIDDEN))
 
@@ -79,6 +80,7 @@ Main:
 			_main.Finest("G_sort", G_sort)
 			_main.Finest("G_ibm", G_ibm)
 			_main.Finest("G_max_nested_lv", G_max_nested_lv)
+			_main.Finest("G_quiet", G_quiet)
 			_main.Finest("G_version", G_version)
 			_main.Finest("G_help", G_help)
 		}
@@ -255,7 +257,7 @@ output(text) {
 
 	res := true
 	try {
-		if (res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
+		if (!G_quiet && res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
 			if (G_out_h)
 				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
 			else
@@ -323,8 +325,8 @@ ldap_get_user_list(groupcn) {
 							ldap_get_user_list($1)
 							l--
 						} else {
-							if (user_list[$] = "" || G_refs) {
-								if (output(format_output($, (G_short ? groupcn : ldap_get_dn("cn=" groupcn)))))
+							if (user_list[$] = "") {
+								if (output(format_output($, (G_short || !G_refs ? groupcn : ldap_get_dn("cn=" groupcn)))))
 									n++
 								user_list[$] := 1
 							}
