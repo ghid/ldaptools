@@ -23,7 +23,7 @@ SendMode Input
 Main:
 	_main := new Logger("app.gu.Main")
 	
-	global G_count, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet
+	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet
 
 	global G_LDAP_CONN := 0
 
@@ -47,6 +47,7 @@ Main:
 	op.Add(new OptParser.Group("`nOptions"))
 	op.Add(new OptParser.Boolean("1", "short", G_short, "Display common names instead of the DN"))
 	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
+	op.Add(new OptParser.Boolean("C", "count-only", G_count_only, "Return the number of hits as exit code; no other output"))
 	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set (see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
 	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
 	op.Add(new OptParser.Boolean("i", "ignore-case", G_ignore_case, "Ignore case when filtering results", OptParser.OPT_NEG, G_ignore_case, G_ignore_case))
@@ -67,6 +68,7 @@ Main:
 
 		if (_main.Logs(Logger.Finest)) {
 			_main.Finest("G_count", G_count)
+			_main.Finest("G_count_only", G_count_only)
 			_main.Finest("G_refs", G_refs)
 			_main.Finest("G_short", G_short)
 			_main.Finest("G_append", G_append)
@@ -139,10 +141,12 @@ Main:
 			_main.Finest("G_groupfilter", G_groupfilter)
 		}
 
-		Ansi.Write("Connecting to " G_host " ... ")
+		if (!G_count_only)
+			Ansi.Write("Connecting to " G_host " ... ")
 		G_LDAP_CONN := new Ldap(G_host)
 		G_LDAP_CONN.Connect()
-		Ansi.WriteLine("Ok.")
+		if (!G_count_only)
+			Ansi.WriteLine("Ok.")
 
 		; dn := ldap_get_dn("(cn=" args[1] ")")
 		
@@ -150,7 +154,8 @@ Main:
 			; _main.Finest("dn", dn)
 		; }
 		; Ansi.WriteLine(dn, true)
-		Ansi.WriteLine(format_output(ldap_get_dn("cn=" args[1]), ""))
+		if (!G_count_only)
+			Ansi.WriteLine(format_output(ldap_get_dn("cn=" args[1]), ""))
 		rc := ldap_get_user_list(args[1])	
 
 		; Handle sort and/or output options
@@ -260,7 +265,7 @@ output(text) {
 		if (!G_quiet && res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
 			if (G_out_h)
 				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
-			else
+			else if (!G_count_only)
 				Ansi.WriteLine("   " text, true)
 	} catch _ex {
 		if (_log.Logs(Logger.Warning)) {
