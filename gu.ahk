@@ -23,7 +23,7 @@ SendMode Input
 Main:
 	_main := new Logger("app.gu.Main")
 	
-	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet
+	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only
 
 	global G_LDAP_CONN := 0
 
@@ -56,6 +56,7 @@ Main:
 	op.Add(new OptParser.Boolean("r", "refs", G_refs, "Display relations"))
 	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Sort result"))
 	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
+	op.Add(new OptParser.Boolean("R", "result-only", G_result_only, "Suppress any other output than the found groups"))
 	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only chase groups which implement objectclass ibm-nestedGroup"))
 	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process (default=32)",, G_max_nested_lv, G_max_nested_lv))
 	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GU_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
@@ -80,6 +81,7 @@ Main:
 			_main.Finest("G_lower", G_lower)
 			_main.Finest("G_upper", G_upper)
 			_main.Finest("G_sort", G_sort)
+			_main.Finest("G_result_only", G_result_only)
 			_main.Finest("G_ibm", G_ibm)
 			_main.Finest("G_max_nested_lv", G_max_nested_lv)
 			_main.Finest("G_quiet", G_quiet)
@@ -102,7 +104,9 @@ Main:
 		OptParser.TrimArg(G_max_nested_lv)
 		OptParser.TrimArg(G_output)
 		OptParser.TrimArg(G_append)
+		OptParser.TrimArg(G_host)
 		if (_main.Logs(Logger.Finest)) {
+			_main.Finest("G_host", G_host)
 			_main.Finest("G_append", G_append)
 			_main.Finest("G_output", G_output)
 			_main.Finest("G_max_nested_lv", G_max_nested_lv)
@@ -141,20 +145,14 @@ Main:
 			_main.Finest("G_groupfilter", G_groupfilter)
 		}
 
-		if (!G_count_only)
+		if (!G_count_only && !G_result_only)
 			Ansi.Write("Connecting to " G_host " ... ")
 		G_LDAP_CONN := new Ldap(G_host)
 		G_LDAP_CONN.Connect()
-		if (!G_count_only)
+		if (!G_count_only && !G_result_only)
 			Ansi.WriteLine("Ok.")
 
-		; dn := ldap_get_dn("(cn=" args[1] ")")
-		
-		; if (_main.Logs(Logger.Finest)) {
-			; _main.Finest("dn", dn)
-		; }
-		; Ansi.WriteLine(dn, true)
-		if (!G_count_only)
+		if (!G_count_only && !G_result_only)
 			Ansi.WriteLine(format_output(ldap_get_dn("cn=" args[1]), ""))
 		rc := ldap_get_user_list(args[1])	
 
@@ -264,9 +262,9 @@ output(text) {
 	try {
 		if (!G_quiet && res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
 			if (G_out_h)
-				G_out_h.WriteLine((!G_output && !G_append ? "   " : "") text)
+				G_out_h.WriteLine((!G_output && !G_append && !G_result_only ? "   " : "") text)
 			else if (!G_count_only)
-				Ansi.WriteLine("   " text, true)
+				Ansi.WriteLine((!G_result_only ? "   ":"") text, true)
 	} catch _ex {
 		if (_log.Logs(Logger.Warning)) {
 			_log.Warning(_ex.Message)
