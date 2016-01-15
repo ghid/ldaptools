@@ -1,3 +1,4 @@
+; ahk: x86
 #NoEnv
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
@@ -149,6 +150,7 @@ Main:
 			Ansi.Write("Connecting to " G_host " ... ")
 		G_LDAP_CONN := new Ldap(G_host)
 		G_LDAP_CONN.Connect()
+		G_LDAP_CONN.SetOption(Ldap.OPT_VERSION, Ldap.VERSION3)
 		if (!G_count_only && !G_result_only)
 			Ansi.WriteLine("Ok.")
 
@@ -224,12 +226,12 @@ format_output(text, ref) {
 
 	if (G_refs) {
 		if (G_short)
-			if (RegExMatch(ref, "^.*?=(.*?),.*$", $))
+			if (RegExMatch(ref, "^.*?=\s*(.*?)\s*,.*$", $))
 				ref := $1
 	} else
 		ref := ""
 	if (G_short) {
-		if (RegExMatch(text, "^.*?=(.*?),.*$", $))
+		if (RegExMatch(text, "^.*?=\s*(.*?)\s*,.*$", $))
 			text := $1	
 	}
 	if (G_upper) {
@@ -289,14 +291,14 @@ ldap_get_user_list(groupcn) {
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("G_groupfilter", G_groupfilter)
 	}
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" groupcn "))")
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" groupcn "))")
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
 	loop %iCount% {
 		if (A_Index = 1)
-			member := G_LDAP_CONN.FirstEntry()
+			member := G_LDAP_CONN.FirstEntry(sr)
 		else
 			member := G_LDAP_CONN.NextEntry(member)
 		pAttr := G_LDAP_CONN.FirstAttribute(member)
@@ -359,8 +361,8 @@ ldap_is_group(cn) {
 		_log.Input("cn", cn)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" cn "))")
-	if (G_LDAP_CONN.CountEntries())
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" cn "))")
+	if (G_LDAP_CONN.CountEntries(sr))
 		return _log.Exit(true)	
 	else	
 		return _log.Exit(false)
@@ -373,8 +375,8 @@ ldap_get_dn(ldapFilter) {
 		_log.Input("ldapFilter", ldapFilter)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -383,7 +385,7 @@ ldap_get_dn(ldapFilter) {
 	} else if (iCount > 1) {
 		throw _log.Exit(Exception("error: cn is ambigous (" iCount ") """ ldapFilter """",, RC_CN_AMBIGOUS))
 	}
-	entry := G_LDAP_CONN.FirstEntry()
+	entry := G_LDAP_CONN.FirstEntry(sr)
 
 	return _log.Exit(G_LDAP_CONN.GetDn(entry))
 }
