@@ -1,3 +1,4 @@
+; ahk: x86
 #NoEnv
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
@@ -18,12 +19,12 @@ SendMode Input
 #Include <ansi>
 #Include <string>
 #Include *i %A_ScriptDir%\gi.versioninfo
-#Include d:\work\ahk\projects\Lib2\ldap.ahk
+#Include <ldap>
 
-Main:
-	_main := new Logger("app.gi.Main")
+Init:
+	_init := new Logger("app.gi.Main")
 	
-	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only
+	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "localhost", G_port := 389, G_help, G_sort, G_version, G_nested_groups, G_ibm, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only, G_group
 
 	global G_LDAP_CONN := 0
 
@@ -31,6 +32,7 @@ Main:
 	global G_member_list := []
 	global G_scanned_group := []
 	global G_out_file_name := ""
+	global G_group_list := []
 
 	global RC_OK             := -1
 	     , RC_MISSING_ARG    := -2
@@ -49,7 +51,9 @@ Main:
 	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
 	op.Add(new OptParser.Boolean("C", "count-only", G_count_only, "Return the number of hits as exit code; no other output"))
 	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set (see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
-	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
+	op.Add(new OptParser.Callback("g", "group", G_group, "Numeric", "number", "Return the group of regex evaluation as result (implies -e)", OptParser.OPT_ARG))
+	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")", OptParser.OPT_ARG, G_host, G_host))
+	op.Add(new OptParser.String("p", "port", G_port, "portnumber", "Port of the LDAP-Server (default=" G_port ")", OptParser.OPT_ARG, G_port, G_Port))
 	op.Add(new OptParser.Boolean("i", "ignore-case", G_ignore_case, "Ignore case when filtering results", OptParser.OPT_NEG, G_ignore_case, G_ignore_case))
 	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Display result in lower case characters"))
 	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Display result in upper case characters"))
@@ -67,34 +71,36 @@ Main:
 	try {
 		args := op.Parse(System.vArgs)
 
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_count", G_count)
-			_main.Finest("G_count_only", G_count_only)
-			_main.Finest("G_refs", G_refs)
-			_main.Finest("G_short", G_short)
-			_main.Finest("G_append", G_append)
-			_main.Finest("G_output", G_output)
-			_main.Finest("G_host", G_host)
-			_main.Finest("G_ignore_case", G_ignore_case)
-			_main.Finest("G_color", G_color)
-			_main.Finest("G_regex", G_regex)
-			_main.Finest("G_lower", G_lower)
-			_main.Finest("G_upper", G_upper)
-			_main.Finest("G_sort", G_sort)
-			_main.Finest("G_result_only", G_result_only)
-			_main.Finest("G_ibm", G_ibm)
-			_main.Finest("G_max_nested_lv", G_max_nested_lv)
-			_main.Finest("G_quiet", G_quiet)
-			_main.Finest("G_version", G_version)
-			_main.Finest("G_help", G_help)
+		if (_init.Logs(Logger.Finest)) {
+			_init.Finest("G_append", G_append)
+			_init.Finest("G_color", G_color)
+			_init.Finest("G_count", G_count)
+			_init.Finest("G_count_only", G_count_only)
+			_init.Finest("G_group_list =`n" LoggingHelper.Dump(G_group_list))
+			_init.Finest("G_help", G_help)
+			_init.Finest("G_host", G_host)
+			_init.Finest("G_ibm", G_ibm)
+			_init.Finest("G_ignore_case", G_ignore_case)
+			_init.Finest("G_lower", G_lower)
+			_init.Finest("G_max_nested_lv", G_max_nested_lv)
+			_init.Finest("G_output", G_output)
+			_init.Finest("G_port", G_port)
+			_init.Finest("G_quiet", G_quiet)
+			_init.Finest("G_refs", G_refs)
+			_init.Finest("G_regex", G_regex)
+			_init.Finest("G_result_only", G_result_only)
+			_init.Finest("G_short", G_short)
+			_init.Finest("G_sort", G_sort)
+			_init.Finest("G_upper", G_upper)
+			_init.Finest("G_version", G_version)
 		}
 
 		if (G_help) {
 			Ansi.WriteLine(op.Usage())
-			exitapp _main.Exit(RC_OK)
+			exitapp _init.Exit(RC_OK)
 		} else if (G_version) {
 			Ansi.WriteLine(G_VERSION_INFO.NAME "/" G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
-			exitapp _main.Exit(RC_OK)
+			exitapp _init.Exit(RC_OK)
 		}
 
 		if (args.MaxIndex() < 1) {
@@ -102,14 +108,16 @@ Main:
 		}
 
 		OptParser.TrimArg(G_host)
+		OptParser.TrimArg(G_port)
 		OptParser.TrimArg(G_max_nested_lv)
 		OptParser.TrimArg(G_output)
 		OptParser.TrimArg(G_append)
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_host", G_host)
-			_main.Finest("G_append", G_append)
-			_main.Finest("G_output", G_output)
-			_main.Finest("G_max_nested_lv", G_max_nested_lv)
+		if (_init.Logs(Logger.Finest)) {
+			_init.Finest("G_host", G_host)
+			_init.Finest("G_port", G_port)
+			_init.Finest("G_append", G_append)
+			_init.Finest("G_output", G_output)
+			_init.Finest("G_max_nested_lv", G_max_nested_lv)
 		}
 		if (G_output && G_append) {
 			throw Exception("error: Options '-o' and '-a' cannot be used together",, RC_INVALID_ARGS)
@@ -119,105 +127,178 @@ Main:
 			throw Exception("error: Options '-l' and '-u' cannot be used together",, RC_INVALID_ARGS)
 		}
 
+		if (_init.Logs(Logger.Finest)) {
+			_init.Finest("G_group_list.MaxIndex()", G_group_list.MaxIndex())
+			_init.Finest("G_regex", G_regex)
+		}
+		if (G_group_list.MaxIndex() <> "") {
+			G_group := true
+			if (!G_regex) {
+				G_regex := true
+				if (_init.Logs(Logger.Info)) {
+					_init.Info("Option -g implies -e")
+					_init.Finest("G_regex", G_regex)
+				}
+			}		
+		}
+
+		if (G_regex)
+			G_filter := "(.*)"
+
 		G_cn := args[1]
 		if (args.MaxIndex() = 2)
 			G_filter := args[2]
 
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_cn", G_cn)
-			_main.Finest("G_filter", G_filter)
-		}
-
-		if (G_sort || G_output || G_append) {
-			G_out_h := FileOpen(A_Temp "\__gi__.dat", "w`n")
-			if ((G_output || G_append) && G_color <> true) {
-				G_color := false
-				if (_main.Logs(Logger.Warning)) {
-					_main.Warning("G_color has been set to false because of file output", G_color)
-				}
-			}
-		}
-
-		if (G_ibm) {
-			G_groupfilter := "ibm-nestedGroup"
-		}
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_groupfilter", G_groupfilter)
+		if (_init.Logs(Logger.Finest)) {
+			_init.Finest("G_cn", G_cn)
+			_init.Finest("G_filter", G_filter)
 		}
 
 		if (!G_count_only && !G_result_only)
-			Ansi.Write("Connecting to " G_host " ... ")
-		G_LDAP_CONN := new Ldap(G_host)
-		G_LDAP_CONN.Connect()
-		if (!G_count_only && !G_result_only)
-			Ansi.WriteLine("Ok.")
+			Ansi.Write("Connecting to " G_host ":" G_port " ... ")
 
-		dn := ldap_get_dn("(cn=" args[1] ")")
-		
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("dn", dn)
-		}
-		if (!G_count_only && !G_result_only)
-			Ansi.WriteLine(format_output(dn, ""), true)
-		rc := ldap_get_group_list(dn)	
+		rc := main()
 
-		; Handle sort and/or output options
-		; ---------------------------------
-		if (G_out_h)
-			G_out_h.Close()
-		if (_main.Logs(Logger.Finest)) {
-			_main.Finest("G_out_h", G_out_h)
+	} catch _init_ex {
+		if (_init.Logs(Logger.Info)) {
+			_init.Info("_init_ex", _init_ex)
 		}
-		if (G_out_h) {
-			h_gi := FileOpen(A_Temp "\__gi__.dat", "r`n")
-			if (_main.Logs(Logger.Finest)) {
-				_main.Finest("h_gi", h_gi)
-				_main.Finest("h_gi.Length", h_gi.Length)
-			}
-			content := h_gi.Read(h_gi.Length)
-			h_gi.Close()
-			; FileRead content, %A_Temp%\__gi__.dat
-			if (G_sort)
-				Sort content
-			FileDelete %A_Temp%\__gi__.dat
-		}
-
-		if (G_append) {
-			file_name := G_append
-		} else if (G_output) {
-			if (FileExist(G_output))
-				FileDelete %G_output%
-			file_name := G_output
-		} else {
-			file_name := "*"
-		}
-		if (_main.Logs(Logger.Info)) {
-			_main.Info("file_name", file_name)
-		}
-		if (file_name = "*")
-			Ansi.Write(content)
-		else
-			FileAppend %content%, %file_name%
-		content := ""
-
-		if (G_count)
-			Ansi.WriteLine("`n" rc " Hit(s)")
-	} catch _ex {
-		if (_main.Logs(Logger.Info)) {
-			_main.Info("_ex", _ex)
-		}
-		Ansi.WriteLine(_ex.Message)
+		Ansi.WriteLine(_init_ex.Message)
 		Ansi.WriteLine(op.Usage())
-		rc := _ex.Extra
+		rc := _init_ex.Extra
 	} finally {
-		_main.Info("Executing finally block")
+		_init.Info("Executing finally block")
 		if (G_LDAP_CONN)
 			G_LDAP_CONN.Unbind()
 		if (G_out_h)
 			G_out_h.Close()
 	}
 	
-exitapp	_main.Exit(rc)
+exitapp	_init.Exit(rc)
+
+main() {
+	_log := new Logger("app.gi." A_ThisFunc)
+
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("G_append", G_append)
+		_log.Finest("G_color", G_color)
+		_log.Finest("G_count", G_count)
+		_log.Finest("G_count_only", G_count_only)
+		_log.Finest("G_group_list =`n" LoggingHelper.Dump(G_group_list))
+		_log.Finest("G_help", G_help)
+		_log.Finest("G_host", G_host)
+		_log.Finest("G_ibm", G_ibm)
+		_log.Finest("G_ignore_case", G_ignore_case)
+		_log.Finest("G_lower", G_lower)
+		_log.Finest("G_max_nested_lv", G_max_nested_lv)
+		_log.Finest("G_output", G_output)
+		_log.Finest("G_port", G_port)
+		_log.Finest("G_quiet", G_quiet)
+		_log.Finest("G_refs", G_refs)
+		_log.Finest("G_regex", G_regex)
+		_log.Finest("G_result_only", G_result_only)
+		_log.Finest("G_short", G_short)
+		_log.Finest("G_sort", G_sort)
+		_log.Finest("G_upper", G_upper)
+		_log.Finest("G_version", G_version)
+		_log.Finest("G_cn", G_cn)
+		_log.Finest("G_filter", G_filter)
+		_log.Finest("G_groupfilter", G_groupfilter)
+	}
+
+	if (G_sort || G_output || G_append) {
+		G_out_h := FileOpen(A_Temp "\__gi__.dat", "w`n")
+		if ((G_output || G_append) && G_color <> true) {
+			G_color := false
+			if (_log.Logs(Logger.Warning)) {
+				__log.Warning("G_color has been set to false because of file output", G_color)
+			}
+		}
+	}
+
+	if (G_ibm) {
+		G_groupfilter := "ibm-nestedGroup"
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("G_groupfilter", G_groupfilter)
+		}
+	}
+
+	G_LDAP_CONN := new Ldap(G_host, G_port)
+	G_LDAP_CONN.Connect()
+	if (!G_count_only && !G_result_only)
+		Ansi.WriteLine("Ok.")
+
+	dn := ldap_get_dn("(cn=" G_cn ")")
+	
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("dn", dn)
+	}
+	if (!G_count_only && !G_result_only)
+		Ansi.WriteLine(format_output(dn, ""), true)
+	n := ldap_get_group_list(dn)	
+
+	; Handle sort and/or output options
+	; ---------------------------------
+	if (G_out_h)
+		G_out_h.Close()
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("G_out_h", G_out_h)
+	}
+	content := ""
+	if (G_out_h) {
+		h_gi := FileOpen(A_Temp "\__gi__.dat", "r`n")
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("h_gi", h_gi)
+			_log.Finest("h_gi.Length", h_gi.Length)
+		}
+		content := h_gi.Read(h_gi.Length)
+		h_gi.Close()
+		; FileRead content, %A_Temp%\__gi__.dat
+		if (G_sort)
+			Sort content
+		FileDelete %A_Temp%\__gi__.dat
+	}
+
+	if (G_append) {
+		file_name := G_append
+	} else if (G_output) {
+		if (FileExist(G_output))
+			FileDelete %G_output%
+		file_name := G_output
+	} else {
+		file_name := "*"
+	}
+	if (_log.Logs(Logger.Info)) {
+		_log.Info("file_name", file_name)
+	}
+	if (file_name = "*")
+		Ansi.Write(content)
+	else
+		FileAppend %content%, %file_name%
+	content := ""
+
+	if (G_count)
+		Ansi.WriteLine("`n" n " Hit(s)")
+
+	return _log.Exit(n)
+}
+
+Numeric(number, no_opt = "") {
+	_log := new Logger("app.gi." A_ThisFunc)
+	
+	if (_log.Logs(Logger.Input)) {
+		_log.Input("number", number)
+		_log.Input("no_opt", no_opt)
+	}
+
+	G_group_list.Push(number)
+
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("G_group_list" LoggingHelper.Dump(G_group_list))
+	}
+	
+	return _log.Exit(G_group.MaxIndex())
+}
 
 format_output(text, ref) {
 	_log := new Logger("app.gi." A_ThisFunc)
@@ -258,23 +339,30 @@ format_output(text, ref) {
 
 output(text) {
 	_log := new Logger("app.gi." A_ThisFunc)
-	
+
 	if (_log.Logs(Logger.Input)) {
 		_log.Input("text", text)
 	}
 
 	res := true
 	try {
-		if (!G_quiet && res := text.Filter(G_filter, G_regex, (G_ignore_case = true ? true : false)))
+		if (!G_quiet && res := Ansi.PlainStr(text).Filter(G_filter, G_regex, (G_ignore_case = true ? true : false), match)) {
+			if (G_group_list.MaxIndex() <> "") {
+				text := ""
+				loop % match.Count 
+					text .= match[G_group_list[A_Index]]	
+			}
 			if (G_out_h)
 				G_out_h.WriteLine((!G_output && !G_append && !G_result_only ? "   " : "") text)
 			else if (!G_count_only)
 				Ansi.WriteLine((!G_result_only ? "   ":"") text, true)
-	} catch _ex {
-		if (_log.Logs(Logger.Warning)) {
-			_log.Warning(_ex.Message)
-			res := false
 		}
+	} catch _ex {
+		if (_log.Logs(Logger.Severe)) {
+			_log.Severe(_ex.Message)
+		}
+		throw _log.Exit(_ex)
+		res := false
 	}
 	
 	return _log.Exit(res)
@@ -295,14 +383,14 @@ ldap_get_group_list(memberdn) {
 		_log.Finest("l", l)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
 	loop %iCount% {
 		if (A_Index = 1)
-			member := G_LDAP_CONN.FirstEntry()
+			member := G_LDAP_CONN.FirstEntry(sr)
 		else
 			member := G_LDAP_CONN.NextEntry(member)
 		dn := G_LDAP_CONN.GetDn(member)
@@ -339,8 +427,8 @@ ldap_get_dn(ldapFilter) {
 		_log.Input("ldapFilter", ldapFilter)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -349,7 +437,7 @@ ldap_get_dn(ldapFilter) {
 	} else if (iCount > 1) {
 		throw _log.Exit(Exception("error: cn is ambigous (" iCount ") """ ldapFilter """",, RC_CN_AMBIGOUS))
 	}
-	entry := G_LDAP_CONN.FirstEntry()
+	entry := G_LDAP_CONN.FirstEntry(sr)
 
 	return _log.Exit(G_LDAP_CONN.GetDn(entry))
 }
