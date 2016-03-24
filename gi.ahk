@@ -1,3 +1,4 @@
+; ahk: x86
 #NoEnv
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
@@ -23,7 +24,7 @@ SendMode Input
 Main:
 	_main := new Logger("app.gi.Main")
 	
-	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "LX150W05.viessmann.com", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only
+	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "localhost", G_port := 389, G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only, G_ibm_all_groups, G_ibm_nested_group
 
 	global G_LDAP_CONN := 0
 
@@ -49,7 +50,8 @@ Main:
 	op.Add(new OptParser.Boolean("c", "count", G_count, "Display number of hits"))
 	op.Add(new OptParser.Boolean("C", "count-only", G_count_only, "Return the number of hits as exit code; no other output"))
 	op.Add(new OptParser.Boolean("e", "regex", G_regex, "Use a regular expression to filter the result set (see also http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
-	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP-Server (default=" G_host ")",, G_host, G_host))
+	op.Add(new OptParser.String("h", "host", G_host, "host-name", "Hostname of the LDAP server (default=" G_host ")",, G_host, G_host))
+	op.Add(new OptParser.String("p", "port", G_port, "portnum", "Port number of the LDAP server (default=" G_port ")",, G_port, G_port))
 	op.Add(new OptParser.Boolean("i", "ignore-case", G_ignore_case, "Ignore case when filtering results", OptParser.OPT_NEG, G_ignore_case, G_ignore_case))
 	op.Add(new OptParser.Boolean("l", "lower", G_lower, "Display result in lower case characters"))
 	op.Add(new OptParser.Boolean("u", "upper", G_upper, "Display result in upper case characters"))
@@ -57,7 +59,8 @@ Main:
 	op.Add(new OptParser.Boolean("s", "sort", G_sort, "Sort result"))
 	op.Add(new OptParser.Boolean(0, "color", G_color, "Colored output (deactivated by default if -a or -o option is set)",OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
 	op.Add(new OptParser.Boolean("R", "result-only", G_result_only, "Suppress any other output than the found groups"))
-	op.Add(new OptParser.Boolean(0, "ibm", G_ibm, "Only show groups which implement objectclass ibm-nestedGroup"))
+	op.Add(new OptParser.Boolean(0, "ibm-nested-group", G_ibm_nested_group, "Only show groups which implement objectclass ibm-nestedGroup"))
+	op.Add(new OptParser.Boolean(0, "ibm-all-groups", G_ibm_all_groups, "Use 'ibm_allgroups' to retrieve data"))
 	op.Add(new OptParser.String(0, "max-nested-level", G_max_nested_lv, "n", "Defines, which recursion depth terminates the process (default=32)",, G_max_nested_lv, G_max_nested_lv))
 	op.Add(new OptParser.Boolean(0, "env", env_dummy, "Ignore environment variable GI_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean("q", "quiet", G_quiet, "Suppress output of results"))
@@ -75,6 +78,7 @@ Main:
 			_main.Finest("G_append", G_append)
 			_main.Finest("G_output", G_output)
 			_main.Finest("G_host", G_host)
+			_main.Finest("G_port", G_port)
 			_main.Finest("G_ignore_case", G_ignore_case)
 			_main.Finest("G_color", G_color)
 			_main.Finest("G_regex", G_regex)
@@ -82,7 +86,8 @@ Main:
 			_main.Finest("G_upper", G_upper)
 			_main.Finest("G_sort", G_sort)
 			_main.Finest("G_result_only", G_result_only)
-			_main.Finest("G_ibm", G_ibm)
+			_main.Finest("G_ibm_nested_group", G_ibm_nested_group)
+			_main.Finest("G_ibm_all_groups", G_ibm_all_groups)
 			_main.Finest("G_max_nested_lv", G_max_nested_lv)
 			_main.Finest("G_quiet", G_quiet)
 			_main.Finest("G_version", G_version)
@@ -119,6 +124,14 @@ Main:
 			throw Exception("error: Options '-l' and '-u' cannot be used together",, RC_INVALID_ARGS)
 		}
 
+		if (G_ibm_all_groups && G_refs) {
+			throw Exception("error: Options '-r' and '--ibm-all-groups' cannot be used together",, RC_INVALID_ARGS)
+		}
+
+		if (G_ibm_all_groups && G_ibm_nested_group) {
+			throw Exception("error: Options '--ibm-nested-group' and '--ibm-all-groups' cannot be used together",, RC_INVALID_ARGS)
+		}
+
 		G_cn := args[1]
 		if (args.MaxIndex() = 2)
 			G_filter := args[2]
@@ -138,7 +151,7 @@ Main:
 			}
 		}
 
-		if (G_ibm) {
+		if (G_ibm_nested_group) {
 			G_groupfilter := "ibm-nestedGroup"
 		}
 		if (_main.Logs(Logger.Finest)) {
@@ -159,7 +172,12 @@ Main:
 		}
 		if (!G_count_only && !G_result_only)
 			Ansi.WriteLine(format_output(dn, ""), true)
-		rc := ldap_get_group_list(dn)	
+
+		if (!G_ibm_all_groups) {
+			rc := ldap_get_group_list(dn)	
+		} else {
+			rc := ldap_get_all_group_list(args[1])
+		}
 
 		; Handle sort and/or output options
 		; ---------------------------------
@@ -295,14 +313,14 @@ ldap_get_group_list(memberdn) {
 		_log.Finest("l", l)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
 	loop %iCount% {
 		if (A_Index = 1)
-			member := G_LDAP_CONN.FirstEntry()
+			member := G_LDAP_CONN.FirstEntry(sr)
 		else
 			member := G_LDAP_CONN.NextEntry(member)
 		dn := G_LDAP_CONN.GetDn(member)
@@ -339,8 +357,8 @@ ldap_get_dn(ldapFilter) {
 		_log.Input("ldapFilter", ldapFilter)
 	}
 
-	G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
-	iCount := G_LDAP_CONN.CountEntries()
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
+	iCount := G_LDAP_CONN.CountEntries(sr)
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -349,9 +367,49 @@ ldap_get_dn(ldapFilter) {
 	} else if (iCount > 1) {
 		throw _log.Exit(Exception("error: cn is ambigous (" iCount ") """ ldapFilter """",, RC_CN_AMBIGOUS))
 	}
-	entry := G_LDAP_CONN.FirstEntry()
+	entry := G_LDAP_CONN.FirstEntry(sr)
 
 	return _log.Exit(G_LDAP_CONN.GetDn(entry))
+}
+
+ldap_get_all_group_list(cn) {
+	_log := new Logger("app.gi." A_ThisFunc)
+
+	static n := 0
+	static group_list := []
+	
+	if (_log.Logs(Logger.Input)) {
+		_log.Input("cn", cn)
+	}
+
+	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(cn=" cn ")",, ["ibm-allgroups"])
+	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("iCount", iCount)
+	}
+	loop %iCount% {
+		if (A_Index = 1)
+			member := G_LDAP_CONN.FirstEntry(sr)
+		else
+			member := G_LDAP_CONN.NextEntry(member)
+		groupAttr := G_LDAP_CONN.FirstAttribute(member)
+		values := G_LDAP_CONN.GetValues(member, groupAttr)
+		group_list := System.PtrListToStrArray(values)
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("A_Index", A_Index)
+			_log.Finest("member", member)
+			_log.Finest("groupAttr", groupAttr)
+			_log.Finest("group_list" LoggingHelper.Dump(group_list))
+		}
+		n := group_list.MaxIndex()
+		if (_log.Logs(Logger.Finest)) {
+			_log.Finest("n", n)
+		}
+		loop %n%
+			output(format_output(group_list[A_Index], ""))
+	}
+	
+	return _log.Exit(n)
 }
 
 ; vim: ts=4:sts=4:sw=4:tw=0:noet
