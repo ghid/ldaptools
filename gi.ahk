@@ -22,9 +22,9 @@ SendMode Input
 #Include <ldap>
 
 Init:
-	_init := new Logger("app.gi.Main")
+	_init := new Logger("app.gi.Init")
 	
-	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "localhost", G_port := 389, G_base_dn, G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only, G_ibm_all_groups, G_ibm_nested_group, G_group
+	global G_count, G_count_only, G_lower, G_upper, G_short, G_output, G_append, G_host := "localhost", G_port := 389, G_base_dn := "", G_help, G_sort, G_version, G_nested_groups, G_groupfilter := "groupOfNames", G_regex, G_out_file, G_out_h := 0, G_refs, G_color, G_max_nested_lv := 32, G_ignore_case := -1, G_quiet, G_result_only, G_ibm_all_groups, G_ibm_nested_group, G_group
 
 	global G_LDAP_CONN := 0
 
@@ -114,12 +114,14 @@ Init:
 
 		OptParser.TrimArg(G_host)
 		OptParser.TrimArg(G_port)
+		OptParser.TrimArg(G_base_dn)
 		OptParser.TrimArg(G_max_nested_lv)
 		OptParser.TrimArg(G_output)
 		OptParser.TrimArg(G_append)
 		if (_init.Logs(Logger.Finest)) {
 			_init.Finest("G_host", G_host)
 			_init.Finest("G_port", G_port)
+			_init.Finest("G_base_dn", G_base_dn)
 			_init.Finest("G_append", G_append)
 			_init.Finest("G_output", G_output)
 			_init.Finest("G_max_nested_lv", G_max_nested_lv)
@@ -152,7 +154,7 @@ Init:
 		if (G_group_list.MaxIndex() <> "") {
 			G_group := true
 			if (!G_regex) {
-				G_regex := true
+		G_regex := true
 				if (_init.Logs(Logger.Info)) {
 					_init.Info("Option -g implies -e")
 					_init.Finest("G_regex", G_regex)
@@ -181,12 +183,6 @@ Init:
 
 		if (!G_count_only && !G_result_only)
 			Ansi.WriteLine(format_output(dn, ""), true)
-
-		if (!G_ibm_all_groups) {
-			rc := ldap_get_group_list(dn)	
-		} else {
-			rc := ldap_get_all_group_list(args[1])
-		}
 
 		if (!G_count_only && !G_result_only)
 			Ansi.Write("Connecting to " G_host ":" G_port " ... ")
@@ -272,10 +268,15 @@ main() {
 	}
 	if (!G_count_only && !G_result_only)
 		Ansi.WriteLine(format_output(dn, ""), true)
-	n := ldap_get_group_list(dn)	
 
-	; Handle sort and/or output options
-	; ---------------------------------
+	if (!G_ibm_all_groups) {
+		n := ldap_get_group_list(dn)	
+	} else {
+		n := ldap_get_all_group_list(G_cn)
+	}
+
+
+	; Handle sort and/or output options; ---------------------------------
 	if (G_out_h)
 		G_out_h.Close()
 	if (_log.Logs(Logger.Finest)) {
@@ -420,8 +421,12 @@ ldap_get_group_list(memberdn) {
 		_log.Finest("l", l)
 	}
 
-	sr := G_LDAP_CONN.Search(G_base_dn, "(&(objectclass=" G_groupfilter ")(member=" memberdn "))")
-	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (!G_LDAP_CONN.Search(sr, G_base_dn, "(&(objectclass=" G_groupfilter ")(member=" memberdn "))") = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception(Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+	if ((iCount := G_LDAP_CONN.CountEntries(sr)) < 0)
+		throw _log.Exit("error: " Exception(Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -430,28 +435,32 @@ ldap_get_group_list(memberdn) {
 			member := G_LDAP_CONN.FirstEntry(sr)
 		else
 			member := G_LDAP_CONN.NextEntry(member)
-		dn := G_LDAP_CONN.GetDn(member)
-		if (_log.Logs(Logger.Finest)) {
-			_log.Finest("A_Index", A_Index)
-			_log.Finest("member", member)
-			_log.Finest("dn", dn)
+		if (member) {
+			if (!(dn := G_LDAP_CONN.GetDn(member)))
+				throw _log.Exit(Exception(Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+			if (_log.Logs(Logger.Finest)) {
+				_log.Finest("A_Index", A_Index)
+				_log.Finest("member", member)
+				_log.Finest("dn", dn)
+			}
+			if (_log.Logs(Logger.Finest)) {
+				_log.Finest("group_list[dn]", group_list[dn])
+			}
+			if (group_list[dn] = "" || G_refs) {
+				if (output(format_output(dn, memberdn)))
+					n++
+				group_list[dn] := 1
+			}
+			l++
+			if (l>G_max_nested_lv) {
+				_log.Finest("dn", dn)
+				_log.Finest("memberdn", memberdn)
+				throw _log.Exit(Exception("error: Cyclic reference detected: `n`t" dn "`n`t<- " memberdn,, RC_CYCLE_DETECTED))
+			}
+			ldap_get_group_list(dn)
+			l--
 		}
-		if (_log.Logs(Logger.Finest)) {
-			_log.Finest("group_list[dn]", group_list[dn])
-		}
-		if (group_list[dn] = "" || G_refs) {
-			if (output(format_output(dn, memberdn)))
-				n++
-			group_list[dn] := 1
-		}
-		l++
-		if (l>G_max_nested_lv) {
-			_log.Finest("dn", dn)
-			_log.Finest("memberdn", memberdn)
-			throw _log.Exit(Exception("error: Cyclic reference detected: `n`t" dn "`n`t<- " memberdn,, RC_CYCLE_DETECTED))
-		}
-		ldap_get_group_list(dn)
-		l--
 	}
 	
 	return _log.Exit(n)
@@ -464,8 +473,12 @@ ldap_get_dn(ldapFilter) {
 		_log.Input("ldapFilter", ldapFilter)
 	}
 
-	sr := G_LDAP_CONN.Search(G_base_dn, ldapFilter)
-	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (!G_LDAP_CONN.Search(sr, G_base_dn, ldapFilter) = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception(Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+	if ((iCount := G_LDAP_CONN.CountEntries(sr)) < 0)
+		throw _log.Exit("error: " Exception(Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -489,8 +502,12 @@ ldap_get_all_group_list(cn) {
 		_log.Input("cn", cn)
 	}
 
-	sr := G_LDAP_CONN.Search(G_base_dn, "(cn=" cn ")",, ["ibm-allgroups"])
-	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (!G_LDAP_CONN.Search(sr, G_base_dn, "(cn=" cn ")",, ["ibm-allgroups"]) = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception("error" Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+	if ((iCount := G_LDAP_CONN.CountEntries(sr) < 0))
+		throw _log.Exit("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError()))
+
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}

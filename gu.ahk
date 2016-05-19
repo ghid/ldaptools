@@ -291,8 +291,12 @@ ldap_get_user_list(groupcn) {
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("G_groupfilter", G_groupfilter)
 	}
-	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" groupcn "))")
-	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (!G_LDAP_CONN.Search(sr, "dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" groupcn "))") = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+	if ((iCount := G_LDAP_CONN.CountEntries(sr)) < 0)
+		throw _log.Exit(Exception("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
@@ -301,48 +305,50 @@ ldap_get_user_list(groupcn) {
 			member := G_LDAP_CONN.FirstEntry(sr)
 		else
 			member := G_LDAP_CONN.NextEntry(member)
-		pAttr := G_LDAP_CONN.FirstAttribute(member)
-		if (_log.Logs(Logger.Finest)) {
-			_log.Finest("pAttr", pAttr)
-		}
-		while (pAttr) {
-			System.StrCpy(pAttr, stAttr)
+		if (member) {
+			pAttr := G_LDAP_CONN.FirstAttribute(member)
 			if (_log.Logs(Logger.Finest)) {
-				_log.Finest("stAttr", stAttr)
+				_log.Finest("pAttr", pAttr)
 			}
-			if (stAttr = "member") {
-				pValues := G_LDAP_CONN.GetValues(member, pAttr)
-				aValues := System.PtrListToStrArray(pValues)
+			while (pAttr) {
+				System.StrCpy(pAttr, stAttr)
 				if (_log.Logs(Logger.Finest)) {
-					_log.Finest("aValues:`n" LoggingHelper.Dump(aValues))
+					_log.Finest("stAttr", stAttr)
 				}
-				loop % aValues.MaxIndex() {
-					if (RegExMatch(aValues[A_Index], "i)cn=(.+)\w*,\w*ou=.+\w*,.*$", $)) {
-						if (_log.Logs(Logger.Finest)) {
-							_log.Finest("$1", $1)
-						}
-						if (ldap_is_group($1)) {
-							l++
-							if (l>G_max_nested_lv) {
-								_log.Finest("groupcn", groupcn)
-								throw _log.Exit(Exception("error: Cyclic reference detected: `n`t" $ "`n`t<- " groupcn,, RC_CYCLE_DETECTED))
+				if (stAttr = "member") {
+					pValues := G_LDAP_CONN.GetValues(member, pAttr)
+					aValues := System.PtrListToStrArray(pValues)
+					if (_log.Logs(Logger.Finest)) {
+						_log.Finest("aValues:`n" LoggingHelper.Dump(aValues))
+					}
+					loop % aValues.MaxIndex() {
+						if (RegExMatch(aValues[A_Index], "i)cn=(.+)\w*,\w*ou=.+\w*,.*$", $)) {
+							if (_log.Logs(Logger.Finest)) {
+								_log.Finest("$1", $1)
 							}
-							ldap_get_user_list($1)
-							l--
-						} else {
-							if (user_list[$] = "") {
-								if (output(format_output($, (G_short || !G_refs ? groupcn : ldap_get_dn("cn=" groupcn)))))
-									n++
-								user_list[$] := 1
+							if (ldap_is_group($1)) {
+								l++
+								if (l>G_max_nested_lv) {
+									_log.Finest("groupcn", groupcn)
+									throw _log.Exit(Exception("error: Cyclic reference detected: `n`t" $ "`n`t<- " groupcn,, RC_CYCLE_DETECTED))
+								}
+								ldap_get_user_list($1)
+								l--
+							} else {
+								if (user_list[$] = "") {
+									if (output(format_output($, (G_short || !G_refs ? groupcn : ldap_get_dn("cn=" groupcn)))))
+										n++
+									user_list[$] := 1
+								}
 							}
 						}
 					}
+					break
 				}
-				break
-			}
-			pAttr := G_LDAP_CONN.NextAttribute(member)
-			if (_log.Logs(Logger.Finest)) {
-				_log.Finest("pAttr", pAttr)
+				pAttr := G_LDAP_CONN.NextAttribute(member)
+				if (_log.Logs(Logger.Finest)) {
+					_log.Finest("pAttr", pAttr)
+				}
 			}
 		}
 	}
@@ -361,7 +367,9 @@ ldap_is_group(cn) {
 		_log.Input("cn", cn)
 	}
 
-	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" cn "))")
+	if (!G_LDAP_CONN.Search(sr, "dc=viessmann,dc=net", "(&(objectclass=" G_groupfilter ")(cn=" cn "))") = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
 	if (G_LDAP_CONN.CountEntries(sr))
 		return _log.Exit(true)	
 	else	
@@ -375,8 +383,12 @@ ldap_get_dn(ldapFilter) {
 		_log.Input("ldapFilter", ldapFilter)
 	}
 
-	sr := G_LDAP_CONN.Search("dc=viessmann,dc=net", ldapFilter)
-	iCount := G_LDAP_CONN.CountEntries(sr)
+	if (!G_LDAP_CONN.Search(sr, "dc=viessmann,dc=net", ldapFilter) = Ldap.LDAP_SUCCESS)
+		throw _log.Exit(Exception("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
+	if ((iCount := G_LDAP_CONN.CountEntries(sr)) < 0)
+		throw _log.Exit(Exception("error: " Ldap.Err2String(G_LDAP_CONN.GetLastError())))
+
 	if (_log.Logs(Logger.Finest)) {
 		_log.Finest("iCount", iCount)
 	}
