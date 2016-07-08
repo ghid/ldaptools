@@ -26,18 +26,22 @@ SendMode Input
 init:
 	_init := new Logger("app.gc.Init")
 
-	global G_help, G_version, G_ldap_server := "localhost", G_ldap_port := 389, G_base_dn, G_ldap_port, G_print_search_failures := false, G_pager := true, G_ldif, G_group_pattern := "*"
+	global G_help, G_version, G_ldap_server := "localhost", G_ldap_port := 389, G_base_dn, G_ldap_port, G_print_search_failures := false, G_print_oc_missing := false, G_pager := true, G_ldif, G_group_pattern := "*", G_promote := true, G_ignore_groups_filter := ""
 
 	global G_status_groups := 0, G_status_current := 0
 
 	rc := 0
 	
-	op := new OptParser("gc [-p <port>] [<ldap-server> [<group-name-pattern>]]")
-	op.Add(new OptParser.String("p", "port", G_ldap_port, "portnum", "Port number of the LDAP server (default=" G_ldap_port ")",, G_ldap_port, G_ldap_port))
-	op.Add(new OptParser.String("b", "base-dn", G_base_dn, "basedn", "Provide a base dn to start the search"))
+	op := new OptParser("gc [options] [<ldap-server> [<group-name-pattern>]]",, "GC_OPTIONS")
+	op.Add(new OptParser.String("p", "port", G_ldap_port, "port-num", "Port number of the LDAP server (default=" G_ldap_port ")",, G_ldap_port, G_ldap_port))
+	op.Add(new OptParser.String("b", "base-dn", G_base_dn, "base-dn", "Provide a base dn to start the search"))
 	op.Add(new OptParser.String(0, "ldif", G_ldif, "filename", "Generate an LDIF file to add missing ibm-memberGroup entries", OptParser.Opt_ARG, G_ldif, G_ldif))
+	op.Add(new OptParser.Boolean(0, "promote", G_promote, "Add ibm-memberGroups class to all matching groups if missing", OptParser.OPT_NEG | OptParser.OPT_NEG_USAGE, G_promote))
+	op.Add(new OptParser.String(0, "ignore-group", G_ignore_groups_filter, "group-name-pattern", "Ignore groups matching this filter (may be used multiple)", OptParser.OPT_ARG | OptParser.OPT_MULTIPLE))
 	op.Add(new OptParser.Boolean(0, "pager", G_pager, "Enable paging (default: on)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, G_pager, G_pager))
 	op.Add(new OptParser.Boolean(0, "print-search-failures", G_print_search_failures, "Print if a search failed (default: off)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "print-oc-missing", G_print_oc_missing, "Print if objectclass ibm-nestedGroup is missing (default: off)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "env", _env, "Use/ignore environment variable GC_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean("h", "help", G_help, "Print help"))
 
@@ -48,13 +52,17 @@ init:
 		OptParser.TrimArg(G_ldap_port)
 		OptParser.TrimArg(G_base_dn)
 		OptParser.TrimArg(G_ldif)
+		OptParser.TrimArg(G_ignore_groups_filter)
 
 		if (_init.Logs(Logger.Finest)) {
 			_init.Finest("G_ldap_port", G_ldap_port)
 			_init.Finest("G_base_dn", G_base_dn)
 			_init.Finest("G_ldif", G_ldif)
+			_init.Finest("G_promote", G_promote)
+			_init.Finest("G_ignore_groups_filter", G_ignore_groups_filter)
 			_init.Finest("G_pager", G_pager)
 			_init.Finest("G_print_search_failures", G_print_search_failures)
+			_init.Finest("G_print_oc_missing", G_print_oc_missing)
 			_init.Finest("G_help", G_help)
 			_init.Finest("G_version", G_version)
 		}
@@ -139,9 +147,19 @@ doit(ldap_conn, ldif_file = 0) {
 
 	; HINT: Find all groups, which are no 'ibm-nestedGroups': (&(objectclass=groupOfNames)(!(objectclass=ibm-nestedGroup)))
 	; Find all groups, which are 'ibm-nestedGroups': (objectclass=ibm-nestedGroup)
-	
-	Ansi.WriteLine("Searching for groups: (&(objectclass=ibm-nestedGroup)(cn=" G_group_pattern ")) ...", true)
-	if (ldap_conn.Search(sr, G_base_dn, "(&(objectclass=ibm-nestedGroup)(cn=" G_group_pattern "))", Ldap.SCOPE_SUBTREE, ["member", "ibm-memberGroup"]) = 0) {
+
+	filter := build_filter()
+
+	Ansi.WriteLine("Searching for groups:`n" highlight_filter(filter) "`nin " (G_base_dn <> "" ? G_base_dn : "whole directory") " ...", true)
+	if (G_ldif) {
+		ldif_filter := "`nLDAP filter applied:`n" highlight_filter(filter, false)
+		ldif_filter := StrReplace(ldif_filter, "`n", "`n# ")
+		ldif_file.WriteLine(ldif_filter)
+		ldif_file.WriteLine("`n# Base DN: " (G_base_dn <> "" ? G_base_dn : "Complete directory") "`n")
+		ldif_file.Read(0)
+	}
+
+	if (ldap_conn.Search(sr, G_base_dn, filter, Ldap.SCOPE_SUBTREE, ["objectclass", "member", "ibm-memberGroup"]) = 0) {
 		G_status_groups := ldap_conn.CountEntries(sr)
 		Ansi.WriteLine("Found " G_status_groups " group(s)", true)
 		if (G_status_groups > 0) {
@@ -162,6 +180,74 @@ doit(ldap_conn, ldif_file = 0) {
 		throw Exception("Search: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 
 	return _log.Exit()
+}
+
+highlight_filter(filter, syntax_highlighting = true) {
+
+	static OPERATOR  := "[0;32m"
+		 , ATTRIBUTE := "[0;35m"
+		 , VALUE     := "[0;34m"
+		 , COMPARE   := "[0;31m"
+		 , RESET     := "[0m"
+
+	string := ""
+	indent := 0
+	i := 1
+	while (i <= StrLen(filter)) {
+		char := SubStr(filter, i, 1)
+		st := SubStr(filter, i-1, 2)
+		if (RegExMatch(st, "\([|&!]", $)) {
+			indent++
+			string .= char indent_text("", indent)
+		} else if (st = ")(") {
+			string .= indent_text(char, indent)
+		} else if (st = "))") {
+			indent--
+			string .= indent_text(char, indent)
+		} else {
+			string .= char
+		}
+		i++
+	}
+	if (indent < 0)
+		throw Exception("Invalid LDAP filter")
+
+	filter := string
+
+	if (syntax_highlighting) {
+		filter := RegExReplace(filter, "(\w*?)=([\w_-]+)", ATTRIBUTE "${1}=" VALUE "${2}" RESET)
+		filter := RegExReplace(filter, "[&|!]", OPERATOR "${0}" RESET)
+		filter := RegExReplace(filter, "[<>~*=]", COMPARE "${0}" RESET)
+	}
+
+	return filter
+}
+
+indent_text(text, num) {
+	return ("`n" "  ".Repeat(num) text)
+}
+
+build_filter() {
+	_log := new Logger("app.gc." A_ThisFunc)
+	
+	if (_log.Logs(Logger.Finest)) {
+		_log.Finest("G_group_pattern", G_group_pattern)
+		_log.Finest("G_ignore_groups_filter", G_ignore_groups_filter)
+	}
+
+	filter := "(objectclass=ibm-nestedGroup)"
+	if (G_promote)
+		filter := "(|" filter "(&(objectclass=groupOfNames)(!(objectclass=ibm-nestedGroup))))"
+	if (G_group_pattern)
+		filter := "(&" filter "(cn=" G_group_pattern "))"
+	if (G_ignore_groups_filter) {
+		filter := "(&" filter 
+		loop parse, G_ignore_groups_filter, `n
+			filter .= "(!(cn=" A_LoopField "))"
+		filter .= ")"
+	}
+
+	return _log.Exit(filter)
 }
 
 error(msg) {
@@ -188,6 +274,7 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 	
 	lines := []
 	adds := []
+	ocs := []
 
 	dn := ldap_conn.GetDn(entry)
 	Ansi.Write(Ansi.SaveCursorPosition() "Check " dn "... ", true)
@@ -203,18 +290,24 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 	vals := ldap_conn.GetValues(entry, attr)
 	if (vals = 0)
 		throw Exception("GetValues: " error(Ldap.Err2String(ldap_conn.GetLastError())))
-	vals := System.PtrListToStrArray(vals)
+	vals := System.PtrListToStrArray(vals, false)
 	attrs.Insert(st_attr, vals)
 	while ((attr := ldap_conn.NextAttribute(entry)) <> 0) {
 		System.StrCpy(attr, st_attr)	
-		vals := System.PtrListToStrArray(ldap_conn.GetValues(entry, attr))
+		vals := System.PtrListToStrArray(ldap_conn.GetValues(entry, attr), false)
 		attrs.Insert(st_attr, vals)
 	}
 	if (attr <> 0)
 		throw Exception("NextAttribute: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 	ibm_mg_ix := Arrays.Index(attrs["ibm-memberGroup"])
 	update_win_status("Checking " dn "[" attrs["member"].MaxIndex() "]")
+	if (!Arrays.Index(attrs["objectclass"]).HasKey("ibm-nestedGroup")) {
+		if (G_print_oc_missing)
+			lines.Insert(Ansi.ESC "[33m   -> ibm-nestedGroup missing" Ansi.Reset())
+		ocs.Insert("ibm-nestedGroup")
+	}
 	for i, v in attrs["member"] {
+		OutputDebug %v%
 		if (ldap_conn.Search(sr_member, v, "(objectclass=groupOfNames)") = 0) {
 			if (member_n := ldap_conn.CountEntries(sr_member)) {
 				if (!ibm_mg_ix.HasKey(v)) {
@@ -231,6 +324,8 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 					lines.Insert(Ansi.ESC "[31m   -X " v Ansi.Reset())
 			} else
 				throw Exception("Search: " error(Ldap.Err2String(ldap_conn.GetLastError())))
+		if (!mod(A_Index, 1000))
+			update_win_status("Checking " dn "[" A_Index " of " attrs["member"].MaxIndex() "]")
 	}
 	update_win_status()
 
@@ -247,9 +342,16 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 			ldif_file.WriteLine("")
 			ldif_file.WriteLine("dn: " dn)
 			ldif_file.WriteLine("changetype: modify")
-			ldif_file.WriteLine("add: ibm-memberGroup")
-			loop % adds.MaxIndex()
-				ldif_file.WriteLine("ibm-memberGroup: " adds[A_Index])
+			if (ocs.MaxIndex()) {
+				ldif_file.WriteLine("add: objectclass")
+				loop % ocs.MaxIndex()
+					ldif_file.WriteLine("objectclass: " ocs[A_Index])
+			}
+			if (adds.MaxIndex()) {
+				ldif_file.WriteLine("add: ibm-memberGroup")
+				loop % adds.MaxIndex()
+					ldif_file.WriteLine("ibm-memberGroup: " adds[A_Index])
+			}
 			ldif_file.Read(0)
 		}
 	}
