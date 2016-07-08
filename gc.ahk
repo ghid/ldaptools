@@ -26,7 +26,7 @@ SendMode Input
 init:
 	_init := new Logger("app.gc.Init")
 
-	global G_help, G_version, G_ldap_server := "localhost", G_ldap_port := 389, G_base_dn, G_ldap_port, G_print_search_failures := false, G_print_oc_missing := false, G_pager := true, G_ldif, G_group_pattern := "*", G_promote := true, G_ignore_groups_filter := ""
+	global G_help, G_version, G_ldap_server := "localhost", G_ldap_port := 389, G_base_dn, G_ldap_port, G_print_search_failure := false, G_print_oc_missing := false, G_print_entry_missing := false, G_print_unnecessary_oc := false, G_print_all := false, G_pager := true, G_ldif, G_group_pattern := "*", G_promote := true, G_ignore_groups_filter := ""
 
 	global G_status_groups := 0, G_status_current := 0
 
@@ -39,8 +39,11 @@ init:
 	op.Add(new OptParser.Boolean(0, "promote", G_promote, "Add ibm-memberGroups class to all matching groups if missing", OptParser.OPT_NEG | OptParser.OPT_NEG_USAGE, G_promote))
 	op.Add(new OptParser.String(0, "ignore-group", G_ignore_groups_filter, "group-name-pattern", "Ignore groups matching this filter (may be used multiple)", OptParser.OPT_ARG | OptParser.OPT_MULTIPLE))
 	op.Add(new OptParser.Boolean(0, "pager", G_pager, "Enable paging (default: on)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, G_pager, G_pager))
-	op.Add(new OptParser.Boolean(0, "print-search-failures", G_print_search_failures, "Print if a search failed (default: off)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "print-search-failure", G_print_search_failure, "Print if a search failed (default: off)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean(0, "print-oc-missing", G_print_oc_missing, "Print if objectclass ibm-nestedGroup is missing (default: off)", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "print-entry-missing", G_print_entry_missing, "Print if an ibm-nestedGroup entry is missing", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "print-unnecessary-oc", G_print_unnecessary_oc, "Print if objectclass ibm-nestedGroup is implemented but not used", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+	op.Add(new OptParser.Boolean(0, "print-all", G_print_all, "Print all messages exept --print-search-failure"))
 	op.Add(new OptParser.Boolean(0, "env", _env, "Use/ignore environment variable GC_OPTIONS", OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 	op.Add(new OptParser.Boolean(0, "version", G_version, "Print version info"))
 	op.Add(new OptParser.Boolean("h", "help", G_help, "Print help"))
@@ -61,8 +64,11 @@ init:
 			_init.Finest("G_promote", G_promote)
 			_init.Finest("G_ignore_groups_filter", G_ignore_groups_filter)
 			_init.Finest("G_pager", G_pager)
-			_init.Finest("G_print_search_failures", G_print_search_failures)
+			_init.Finest("G_print_search_failure", G_print_search_failure)
 			_init.Finest("G_print_oc_missing", G_print_oc_missing)
+			_init.Finest("G_print_entry_missing", G_print_entry_missing)
+			_init.Finest("G_print_unnecessary_oc", G_print_unnecessary_oc)
+			_init.Finest("G_print_all", G_print_all)
 			_init.Finest("G_help", G_help)
 			_init.Finest("G_version", G_version)
 		}
@@ -91,6 +97,12 @@ init:
 		if (!G_pager)
 			Pager.bEnablePager := false
 
+		if (G_print_all) {
+			G_print_oc_missing := true
+			G_print_entry_missing := true
+			G_print_unnecessary_oc := true
+		}
+
 		rc := main()
 
 	} catch _init_ex {
@@ -107,6 +119,7 @@ main() {
 
 	ldap_conn := 0
 	ldif_file := 0
+	fails := 0
 
 	try {
 		Ansi.Write("Connection to " G_ldap_server ":" G_ldap_port " ... ", true)
@@ -121,21 +134,21 @@ main() {
 				ldif_file.WriteLine("# Generated with 'gc' tool - " timestamp " by " username)
 				ldif_file.Read(0)
 			}
-			doit(ldap_conn, ldif_file)
+			fails := doit(ldap_conn, ldif_file)
 		} else
 			throw Exception("Connect: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 	} finally {
 		if (ldap_conn) {
 			ldap_conn.Unbind()
-			Ansi.WriteLine("`nConnetion closed")
+			Ansi.WriteLine("`nConnetion closed - " fails " group(s) affected")
 		}
 		if (ldif_file) {
-			ldif_file.WriteLine("`n# Process completed")
+			ldif_file.WriteLine("`n# Process completed - " fails " group(s) affected")
 			ldif_file.Close()
 		}
 	}
 	
-	return _log.Exit()
+	return _log.Exit(fails)
 }
 
 doit(ldap_conn, ldif_file = 0) {
@@ -143,7 +156,10 @@ doit(ldap_conn, ldif_file = 0) {
 
 	if (_log.Logs(Logger.Input)) {
 		_log.Input("ldap_conn", ldap_conn)
+		_log.Input("ldif_file", ldif_file)
 	}
+
+	fails := 0
 
 	; HINT: Find all groups, which are no 'ibm-nestedGroups': (&(objectclass=groupOfNames)(!(objectclass=ibm-nestedGroup)))
 	; Find all groups, which are 'ibm-nestedGroups': (objectclass=ibm-nestedGroup)
@@ -155,7 +171,7 @@ doit(ldap_conn, ldif_file = 0) {
 		ldif_filter := "`nLDAP filter applied:`n" highlight_filter(filter, false)
 		ldif_filter := StrReplace(ldif_filter, "`n", "`n# ")
 		ldif_file.WriteLine(ldif_filter)
-		ldif_file.WriteLine("`n# Base DN: " (G_base_dn <> "" ? G_base_dn : "Complete directory") "`n")
+		ldif_file.WriteLine("`n# Base DN: " (G_base_dn <> "" ? G_base_dn : "Complete directory"))
 		ldif_file.Read(0)
 	}
 
@@ -166,10 +182,10 @@ doit(ldap_conn, ldif_file = 0) {
 			Ansi.WriteLine(" ", true)
 			entry := ldap_conn.FirstEntry(sr)
 			if (entry <> 0) {
-				check_entry(ldap_conn, entry)
+				fails += check_entry(ldap_conn, entry, ldif_file)
 				while ((entry := ldap_conn.NextEntry(entry)) > 0) {
 					G_status_current++
-					check_entry(ldap_conn, entry, ldif_file)
+					fails += check_entry(ldap_conn, entry, ldif_file)
 				}
 				if (entry <> 0)
 					throw Exception("NextEntry: " error(Ldap.Err2String(ldap_conn.GetLastError())))
@@ -179,7 +195,7 @@ doit(ldap_conn, ldif_file = 0) {
 	} else
 		throw Exception("Search: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 
-	return _log.Exit()
+	return _log.Exit(fails)
 }
 
 highlight_filter(filter, syntax_highlighting = true) {
@@ -270,17 +286,19 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 	if (_log.Logs(Logger.Input)) {
 		_log.Input("ldap_conn", ldap_conn)
 		_log.Input("entry", entry)
+		_log.Input("ldif_file", ldif_file)
 	}
 	
 	lines := []
 	adds := []
 	ocs := []
+	no_ocs := []
 
 	dn := ldap_conn.GetDn(entry)
 	Ansi.Write(Ansi.SaveCursorPosition() "Check " dn "... ", true)
 	Ansi.Flush()
 	attrs := {}
-	n := 0
+	fail := false
 	attr := ldap_conn.FirstAttribute(entry)
 	if (attr = 0) {
 		Ansi.WriteLine(error("Group has no member attribute"))
@@ -301,27 +319,25 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 		throw Exception("NextAttribute: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 	ibm_mg_ix := Arrays.Index(attrs["ibm-memberGroup"])
 	update_win_status("Checking " dn "[" attrs["member"].MaxIndex() "]")
-	if (!Arrays.Index(attrs["objectclass"]).HasKey("ibm-nestedGroup")) {
-		if (G_print_oc_missing)
-			lines.Insert(Ansi.ESC "[33m   -> ibm-nestedGroup missing" Ansi.Reset())
-		ocs.Insert("ibm-nestedGroup")
-	}
+
+	contains_groups := 0
 	for i, v in attrs["member"] {
-		OutputDebug %v%
 		if (ldap_conn.Search(sr_member, v, "(objectclass=groupOfNames)") = 0) {
 			if (member_n := ldap_conn.CountEntries(sr_member)) {
+				contains_groups++
 				if (!ibm_mg_ix.HasKey(v)) {
-					n++
-					lines.Insert(Ansi.ESC "[34m   -> " v Ansi.Reset())
+					if (G_print_entry_missing)
+						lines.Insert(Ansi.ESC "[34m   -> ibm-memberGroup entry mssing for " v Ansi.Reset())
 					if (ldif_file)
 						adds.Insert(v)
+					fail := true
 				}
 			} else if (member_n <> 0)
 				throw Exception("CountEntries: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 		} else
 			if (ldap_conn.GetLastError() = 32) {
-				if (G_print_search_failures)
-					lines.Insert(Ansi.ESC "[31m   -X " v Ansi.Reset())
+				if (G_print_search_failure)
+					lines.Insert(Ansi.ESC "[31m   -> Member not found " v Ansi.Reset())
 			} else
 				throw Exception("Search: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 		if (!mod(A_Index, 1000))
@@ -329,12 +345,25 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 	}
 	update_win_status()
 
+	if (!contains_groups && Arrays.Index(attrs["objectclass"]).HasKey("ibm-nestedGroup")) {
+		if (G_print_unnecessary_oc)
+			lines.Insert(Ansi.ESC "[35m   -> Unnecessary objectclass ibm-nestedGroup" Ansi.Reset())
+		no_ocs.Insert("ibm-nestedGroup")
+		fail := true
+	} else if (contains_groups && !Arrays.Index(attrs["objectclass"]).HasKey("ibm-nestedGroup")) {
+		if (G_print_oc_missing)
+			lines.Insert(Ansi.ESC "[33m   -> ibm-nestedGroup objectclass missing" Ansi.Reset())
+		ocs.Insert("ibm-nestedGroup")
+		fail := true
+	}
+
 	Ansi.Write(Ansi.RestoreCursorPosition() Ansi.EraseLine())
-	if (n = 0)
+	if (!fail)
 		process_line("Check " dn "... " Ansi.ESC "[32;7mOK" Ansi.Reset())
 	else
 		process_line("Check " dn "... " Ansi.ESC "[31;7mFAIL" Ansi.Reset())
-	if (lines.MaxIndex()) {
+
+	if (fail) {
 		loop % lines.MaxIndex()
 			process_line(lines[A_Index])
 
@@ -342,21 +371,29 @@ check_entry(ldap_conn, entry, ldif_file = 0) {
 			ldif_file.WriteLine("")
 			ldif_file.WriteLine("dn: " dn)
 			ldif_file.WriteLine("changetype: modify")
-			if (ocs.MaxIndex()) {
-				ldif_file.WriteLine("add: objectclass")
-				loop % ocs.MaxIndex()
-					ldif_file.WriteLine("objectclass: " ocs[A_Index])
-			}
-			if (adds.MaxIndex()) {
-				ldif_file.WriteLine("add: ibm-memberGroup")
-				loop % adds.MaxIndex()
-					ldif_file.WriteLine("ibm-memberGroup: " adds[A_Index])
+			if (no_ocs.MaxIndex()) {
+				ldif_file.WriteLine("delete: objectclass")
+				loop % no_ocs.MaxIndex()
+					ldif_file.WriteLine("objectclass: " no_ocs[A_Index])
+			} else {
+				if (ocs.MaxIndex()) {
+					ldif_file.WriteLine("add: objectclass")
+					loop % ocs.MaxIndex()
+						ldif_file.WriteLine("objectclass: " ocs[A_Index])
+				}
+				if (adds.MaxIndex()) {
+					if (ocs.MaxIndex())
+						ldif_file.WriteLine("-")
+					ldif_file.WriteLine("add: ibm-memberGroup")
+					loop % adds.MaxIndex()
+						ldif_file.WriteLine("ibm-memberGroup: " adds[A_Index])
+				}
 			}
 			ldif_file.Read(0)
 		}
 	}
 
-	return _log.Exit(n)
+	return _log.Exit(fail)
 }
 
 update_win_status(msg = "") {
