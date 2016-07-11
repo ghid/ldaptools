@@ -26,6 +26,7 @@ SendMode Input
 init:
 	_init := new Logger("app.gc.Init")
 
+	global G_VERSION_INFO
 	global G_help, G_version, G_ldap_server := "localhost", G_ldap_port := 389, G_base_dn, G_ldap_port, G_print_search_failure := false, G_print_oc_missing := false, G_print_entry_missing := false, G_print_unnecessary_oc := false, G_print_all := false, G_pager := true, G_ldif, G_group_pattern := "*", G_promote := true, G_ignore_groups_filter := ""
 
 	global G_status_groups := 0, G_status_current := 0
@@ -131,7 +132,9 @@ main() {
 				ldif_file := FileOpen(G_ldif, "w")
 				FormatTime timestamp, LongDate
 				EnvGet username, USERNAME
-				ldif_file.WriteLine("# Generated with 'gc' tool - " timestamp " by " username)
+				ldif_file.WriteLine("# Generated with " G_VERSION_INFO.NAME "/" G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD " - " timestamp " by " username)
+				ldif_file.WriteLine("`n# LDAP server: " G_ldap_server ":" G_ldap_port "`n")
+				ldif_file.WriteLine("`n# Base DN: " (G_base_dn <> "" ? G_base_dn : "Complete directory"))
 				ldif_file.Read(0)
 			}
 			fails := doit(ldap_conn, ldif_file)
@@ -171,7 +174,6 @@ doit(ldap_conn, ldif_file = 0) {
 		ldif_filter := "`nLDAP filter applied:`n" highlight_filter(filter, false)
 		ldif_filter := StrReplace(ldif_filter, "`n", "`n# ")
 		ldif_file.WriteLine(ldif_filter)
-		ldif_file.WriteLine("`n# Base DN: " (G_base_dn <> "" ? G_base_dn : "Complete directory"))
 		ldif_file.Read(0)
 	}
 
