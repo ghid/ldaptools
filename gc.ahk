@@ -169,9 +169,9 @@ doit(ldap_conn, ldif_file = 0) {
 
 	filter := build_filter()
 
-	Ansi.WriteLine("Searching for groups:`n" highlight_filter(filter) "`nin " (G_base_dn <> "" ? G_base_dn : "whole directory") " ...", true)
+	Ansi.WriteLine("Searching for groups:`n" Ldap.FormatFilter(filter) "`nin " (G_base_dn <> "" ? G_base_dn : "whole directory") " ...", true)
 	if (G_ldif) {
-		ldif_filter := "`nLDAP filter applied:`n" highlight_filter(filter, false)
+		ldif_filter := "`nLDAP filter applied:`n" Ldap.FormatFilter(filter, false)
 		ldif_filter := StrReplace(ldif_filter, "`n", "`n# ")
 		ldif_file.WriteLine(ldif_filter)
 		ldif_file.Read(0)
@@ -198,51 +198,6 @@ doit(ldap_conn, ldif_file = 0) {
 		throw Exception("Search: " error(Ldap.Err2String(ldap_conn.GetLastError())))
 
 	return _log.Exit(fails)
-}
-
-highlight_filter(filter, syntax_highlighting = true) {
-
-	static OPERATOR  := "[0;32m"
-		 , ATTRIBUTE := "[0;35m"
-		 , VALUE     := "[0;34m"
-		 , COMPARE   := "[0;31m"
-		 , RESET     := "[0m"
-
-	string := ""
-	indent := 0
-	i := 1
-	while (i <= StrLen(filter)) {
-		char := SubStr(filter, i, 1)
-		st := SubStr(filter, i-1, 2)
-		if (RegExMatch(st, "\([|&!]", $)) {
-			indent++
-			string .= char indent_text("", indent)
-		} else if (st = ")(") {
-			string .= indent_text(char, indent)
-		} else if (st = "))") {
-			indent--
-			string .= indent_text(char, indent)
-		} else {
-			string .= char
-		}
-		i++
-	}
-	if (indent < 0)
-		throw Exception("Invalid LDAP filter")
-
-	filter := string
-
-	if (syntax_highlighting) {
-		filter := RegExReplace(filter, "(\w*?)=([\w_-]+)", ATTRIBUTE "${1}=" VALUE "${2}" RESET)
-		filter := RegExReplace(filter, "[&|!]", OPERATOR "${0}" RESET)
-		filter := RegExReplace(filter, "[<>~*=]", COMPARE "${0}" RESET)
-	}
-
-	return filter
-}
-
-indent_text(text, num) {
-	return ("`n" "  ".Repeat(num) text)
 }
 
 build_filter() {
