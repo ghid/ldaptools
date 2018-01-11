@@ -1,7 +1,7 @@
 ; ahk: x86
 #NoEnv
 SetBatchLines -1
-#Warn All, OutputDebug
+; #Warn All, OutputDebug
 
 #Include <logging>
 #Include <testcase>
@@ -84,6 +84,7 @@ class gi_Test extends TestCase {
 
 	@Before_ResetOpts() {
 		G_append := ""
+		G_base_dn := ""
 		G_cn := ""
 		G_color := -1
 		G_count := 0
@@ -118,8 +119,8 @@ class gi_Test extends TestCase {
 	}
 
 	@Test_Case1() {
-		G_cn := "Charlie Brown"
-		this.AssertEquals(main(), 145)
+		G_cn := "Linus van Pelt"
+		this.AssertEquals(main(), 2)
 	}
 }
 
