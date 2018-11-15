@@ -600,7 +600,8 @@ class GroupInfo
 
 		if ((iCount := GroupInfo.LDAP_CONN.CountEntries(sr)) < 0)
 		{
-			throw _log.Exit("error: " Exception(Ldap.Err2String(GroupInfo.LDAP_CONN.GetLastError())))
+			throw _log.Exit("error: "
+				. Exception(Ldap.Err2String(GroupInfo.LDAP_CONN.GetLastError())))
 		}
 
 		if (_log.Logs(Logger.Finest))
