@@ -116,7 +116,6 @@ class GroupInfo
 		return _log.Exit(op)
 	}
 
-	; TODO: Refactor this run method!
 	run(in_args)
 	{
 		_log := new Logger("class." A_ThisFunc)
@@ -150,28 +149,9 @@ class GroupInfo
 					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
 				return _log.Exit("")
 			}
-			else if (args.MaxIndex() < 1)
+			else 
 			{
-				throw Exception("error: Missing argument",, GroupInfo.RC_MISSING_ARG)
-			}
-			else if (GroupInfo.options.output && GroupInfo.options.append)
-			{
-				throw Exception("error: Options '-o' and '-a' cannot be used together",
-					, GroupInfo.RC_INVALID_ARGS)
-			}
-			else if (GroupInfo.options.upper && GroupInfo.options.lower)
-			{
-				throw Exception("error: Options '-l' and '-u' cannot be used together",
-					, GroupInfo.RC_INVALID_ARGS)
-			}
-			else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.refs)
-			{
-				throw Exception("error: Options '-r' and '--ibm-all-groups' "
-					. "cannot be used together" ,, GroupInfo.RC_INVALID_ARGS)
-			}
-			else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.ibm_nested_group) {
-				throw Exception("error: Options '--ibm-nested-group' and '--ibm-all-groups' "
-					. "cannot be used together",, GroupInfo.RC_INVALID_ARGS)
+				GroupInfo.do_checks()
 			}
 
 			if (GroupInfo.group_list.MaxIndex() <> "")
@@ -241,6 +221,32 @@ class GroupInfo
 		}
 
 		return _log.Exit(rc)
+	}
+
+	do_checks() {
+		if (args.MaxIndex() < 1)
+		{
+			throw Exception("error: Missing argument",, GroupInfo.RC_MISSING_ARG)
+		}
+		else if (GroupInfo.options.output && GroupInfo.options.append)
+		{
+			throw Exception("error: Options '-o' and '-a' cannot be used together",
+			, GroupInfo.RC_INVALID_ARGS)
+		}
+		else if (GroupInfo.options.upper && GroupInfo.options.lower)
+		{
+			throw Exception("error: Options '-l' and '-u' cannot be used together",
+			, GroupInfo.RC_INVALID_ARGS)
+		}
+		else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.refs)
+		{
+			throw Exception("error: Options '-r' and '--ibm-all-groups' "
+			. "cannot be used together" ,, GroupInfo.RC_INVALID_ARGS)
+		}
+		else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.ibm_nested_group) {
+			throw Exception("error: Options '--ibm-nested-group' and '--ibm-all-groups' "
+			. "cannot be used together",, GroupInfo.RC_INVALID_ARGS)
+		}
 	}
 
 	main()
