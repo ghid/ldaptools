@@ -1,1 +1,1 @@
-global G_VERSION_INFO := {NAME: "AHK ldaptools/gi version 18.04-rc1", ARCH: "x86", BUILD: "20181114_152114"}
+global G_VERSION_INFO := {NAME: "AHK ldaptools/gi version 19.02-rc1", ARCH: "x86", BUILD: "871b70463ed160a0ec82bf6fc2f7b2f6f370c0f"}

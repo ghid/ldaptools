@@ -120,13 +120,9 @@ class GroupInfo
 	{
 		_log := new Logger("class." A_ThisFunc)
 
-		if (_log.Logs(Logger.Input))
+		if (_log.Logs(Logger.Input, "in_args", in_args))
 		{
-		    _log.Input("in_args", in_args)
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("in_args:`n" LoggingHelper.Dump(in_args))
-			}
+			_log.Logs(Logger.Finest, "in_args:`n" LoggingHelper.Dump(in_args))
 		}
 
 		try
@@ -134,10 +130,7 @@ class GroupInfo
 			rc := GroupInfo.RC_OK
 			op := GroupInfo.cli()
 			args := op.Parse(in_args)
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("GroupInfo.options:`n" LoggingHelper.Dump(GroupInfo.options))
-			}
+			_log.Logs(Logger.Finest, "GroupInfo.options:`n" LoggingHelper.Dump(GroupInfo.options))
 			
 			if (GroupInfo.options.help) {
 				Ansi.WriteLine(op.Usage())
@@ -151,7 +144,7 @@ class GroupInfo
 			}
 			else 
 			{
-				GroupInfo.do_checks()
+				GroupInfo.do_checks(args)
 			}
 
 			if (GroupInfo.group_list.MaxIndex() <> "")
@@ -172,10 +165,7 @@ class GroupInfo
 			{
 				GroupInfo.group_filter := "ibm-nestedGroup"
 			}
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("GroupInfo.group_filter", GroupInfo.group_filter)
-			}
+			_log.Logs(Logger.Finest, "GroupInfo.group_filter", GroupInfo.group_filter)
 
 			if (GroupInfo.options.regex) {
 				GroupInfo.filter := "(.*)"
@@ -223,40 +213,41 @@ class GroupInfo
 		return _log.Exit(rc)
 	}
 
-	do_checks() {
+	do_checks(args) {
+		_log := new Logger("class." A_ThisFunc)
+
 		if (args.MaxIndex() < 1)
 		{
-			throw Exception("error: Missing argument",, GroupInfo.RC_MISSING_ARG)
+			throw _log.Exit(Exception("error: Missing argument",, GroupInfo.RC_MISSING_ARG))
 		}
 		else if (GroupInfo.options.output && GroupInfo.options.append)
 		{
-			throw Exception("error: Options '-o' and '-a' cannot be used together",
-			, GroupInfo.RC_INVALID_ARGS)
+			throw _log.Exit(Exception("error: Options '-o' and '-a' cannot be used together",
+				, GroupInfo.RC_INVALID_ARGS))
 		}
 		else if (GroupInfo.options.upper && GroupInfo.options.lower)
 		{
-			throw Exception("error: Options '-l' and '-u' cannot be used together",
-			, GroupInfo.RC_INVALID_ARGS)
+			throw _log.Exit(Exception("error: Options '-l' and '-u' cannot be used together",
+				, GroupInfo.RC_INVALID_ARGS))
 		}
 		else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.refs)
 		{
-			throw Exception("error: Options '-r' and '--ibm-all-groups' "
-			. "cannot be used together" ,, GroupInfo.RC_INVALID_ARGS)
+			throw _log.Exit(Exception("error: Options '-r' and '--ibm-all-groups' "
+				. "cannot be used together" ,, GroupInfo.RC_INVALID_ARGS))
 		}
 		else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.ibm_nested_group) {
-			throw Exception("error: Options '--ibm-nested-group' and '--ibm-all-groups' "
-			. "cannot be used together",, GroupInfo.RC_INVALID_ARGS)
+			throw _log.Exit(Exception("error: Options '--ibm-nested-group' and '--ibm-all-groups' "
+				. "cannot be used together",, GroupInfo.RC_INVALID_ARGS))
 		}
+
+		return _log.Exit()
 	}
 
 	main()
 	{
 		_log := new Logger("class." A_ThisFunc)
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("GroupInfo.options:`n" LoggingHelper.Dump(GroupInfo.options))
-		}
+		_log.Logs(Logger.Finest, "GroupInfo.options:`n" LoggingHelper.Dump(GroupInfo.options))
 
 		if (GroupInfo.options.sort
 			|| GroupInfo.options.output
@@ -267,20 +258,15 @@ class GroupInfo
 				&& GroupInfo.options.color <> true)
 			{
 				GroupInfo.options.color := false
-				if (_log.Logs(Logger.Warning))
-				{
-					_log.Warning("option.color has been set to false because of file output"
-						, GroupInfo.options.color)
-				}
+				_log.Logs(Logger.Warning
+					, "option.color has been set to false because of file output"
+					, GroupInfo.options.color)
 			}
 		}
 
 		if (GroupInfo.options.ibm_nested_group) {
 			GroupInfo.group_filter := "ibm-nestedGroup"
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("GroupInfo.group_filter", GroupInfo.group_filter)
-			}
+			_log.Logs(Logger.Finest, "GroupInfo.group_filter", GroupInfo.group_filter)
 		}
 
 		GroupInfo.LDAP_CONN := new Ldap(GroupInfo.options.host, GroupInfo.options.port)
@@ -291,18 +277,18 @@ class GroupInfo
 		}
 
 		dn := GroupInfo.ldap_get_dn("(cn=" GroupInfo.cn ")")
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("dn", dn)
-		}
+		_log.Logs(Logger.Finest, "dn", dn)
 		if (!GroupInfo.options.count_only && !GroupInfo.options.result_only)
 		{
 			Ansi.WriteLine(GroupInfo.format_output(dn, ""), true)
 		}
 
-		if (!GroupInfo.options.ibm_all_groups) {
+		if (!GroupInfo.options.ibm_all_groups)
+		{
 			n := GroupInfo.ldap_get_group_list(dn)	
-		} else {
+		}
+		else
+		{
 			n := GroupInfo.ldap_get_all_group_list(GroupInfo.cn)
 		}
 
@@ -311,10 +297,7 @@ class GroupInfo
 		{
 			GroupInfo.out_h.Close()
 		}
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("GroupInfo.out_h", GroupInfo.out_h)
-		}
+		_log.Logs(Logger.Finest, "GroupInfo.out_h", GroupInfo.out_h)
 		content := ""
 		if (GroupInfo.out_h) {
 			h_gi := FileOpen(A_Temp "\__gi__.dat", "r`n")
@@ -349,10 +332,7 @@ class GroupInfo
 		{
 			file_name := "*"
 		}
-		if (_log.Logs(Logger.Info))
-		{
-			_log.Info("file_name", file_name)
-		}
+		_log.Logs(Logger.Info, "file_name", file_name)
 		if (file_name = "*")
 		{
 			Ansi.Write(content)
@@ -444,19 +424,12 @@ class GroupInfo
 	{
 		_log := new Logger("class." A_ThisFunc)
 
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("text", text)
-		}
+		_log.Logs(Logger.Input, "text", text)
 
 		res := true
 		try
 		{
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("GroupInfo.filter", GroupInfo.filter)
-			}
-
+			_log.Logs(Logger.Finest, "GroupInfo.filter", GroupInfo.filter)
 			if (!GroupInfo.options.quiet
 				&& res := Ansi.PlainStr(text).Filter(GroupInfo.filter
 					, GroupInfo.options.regex
@@ -495,10 +468,7 @@ class GroupInfo
 		}
 		catch _ex
 		{
-			if (_log.Logs(Logger.Severe))
-			{
-				_log.Severe(_ex.Message)
-			}
+			_log.Logs(Logger.Severe, _ex.Message)
 			throw _log.Exit(_ex)
 			res := false
 		}
@@ -513,14 +483,9 @@ class GroupInfo
 		static l := 0
 		static group_list := []
 		
-		if (_log.Logs(Logger.Input))
+		if (_log.Logs(Logger.Input, "memberdn", memberdn))
 		{
-			_log.Input("memberdn", memberdn)
-		}
-
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("l", l)
+			_log.Logs(Logger.Finest, "l", l)
 		}
 
 		if (!GroupInfo.LDAP_CONN.Search(sr, GroupInfo.options.base_dn
@@ -535,10 +500,7 @@ class GroupInfo
 			throw _log.Exit("error: " Exception(Ldap.Err2String(GroupInfo.LDAP_CONN.GetLastError())))
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("iCount", iCount)
-		}
+		_log.Logs(Logger.Finest, "iCount", iCount)
 		loop %iCount%
 		{
 			if (A_Index = 1)
@@ -561,9 +523,6 @@ class GroupInfo
 					_log.Finest("A_Index", A_Index)
 					_log.Finest("member", member)
 					_log.Finest("dn", dn)
-				}
-				if (_log.Logs(Logger.Finest))
-				{
 					_log.Finest("group_list[dn]", group_list[dn])
 				}
 				if (group_list[dn] = "" || GroupInfo.options.refs)
@@ -577,8 +536,11 @@ class GroupInfo
 				l++
 				if (l > GroupInfo.options.max_nested_lv)
 				{
-					_log.Finest("dn", dn)
-					_log.Finest("memberdn", memberdn)
+					if (_log.Logs(Logger.Finest))
+					{
+						_log.Finest("dn", dn)
+						_log.Finest("memberdn", memberdn)
+					}
 					throw _log.Exit(Exception("error: Cyclic reference detected: `n`t"
 						. dn "`n`t<- " memberdn,, RC_CYCLE_DETECTED))
 				}
@@ -593,10 +555,7 @@ class GroupInfo
 	ldap_get_dn(ldapFilter) {
 		_log := new Logger("class." A_ThisFunc)
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("ldapFilter", ldapFilter)
-		}
+		_log.Logs(Logger.Input, "ldapFilter", ldapFilter)
 
 		if (!GroupInfo.LDAP_CONN.Search(sr, GroupInfo.options.base_dn, ldapFilter)
 			= Ldap.LDAP_SUCCESS)
@@ -610,10 +569,7 @@ class GroupInfo
 				. Exception(Ldap.Err2String(GroupInfo.LDAP_CONN.GetLastError())))
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("iCount", iCount)
-		}
+		_log.Logs(Logger.Finest, "iCount", iCount)
 		if (iCount = 0)
 		{
 			throw _log.Exit(Exception("error: cn not found """ ldapFilter """"
@@ -635,10 +591,7 @@ class GroupInfo
 		static n := 0
 		static group_list := []
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("cn", cn)
-		}
+		_log.Logs(Logger.Input, "cn", cn)
 
 		if (!GroupInfo.LDAP_CONN.Search(sr, GroupInfo.options.base_dn
 			, "(cn=" cn ")",, ["ibm-allgroups"]) = Ldap.LDAP_SUCCESS)
@@ -651,10 +604,7 @@ class GroupInfo
 			throw _log.Exit("error: " Ldap.Err2String(GroupInfo.LDAP_CONN.GetLastError()))
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("iCount", iCount)
-		}
+		_log.Logs(Logger.Finest, "iCount", iCount)
 		loop %iCount%
 		{
 			if (A_Index = 1)
@@ -676,10 +626,7 @@ class GroupInfo
 				_log.Finest("group_list" LoggingHelper.Dump(group_list))
 			}
 			n := group_list.MaxIndex()
-			if (_log.Logs(Logger.Finest))
-			{
-				_log.Finest("n", n)
-			}
+			_log.Logs(Logger.Finest, "n", n)
 			loop %n%
 			{
 				GroupInfo.output(GroupInfo.format_output(group_list[A_Index], ""))
@@ -702,10 +649,7 @@ cb_Numeric(number, no_opt = "")
 
 	GroupInfo.group_list.Push(number)
 
-	if (_log.Logs(Logger.Finest))
-	{
-		_log.Finest("GroupInfo.group_list:`n" LoggingHelper.Dump(GroupInfo.group_list))
-	}
+	_log.Logs(Logger.Finest, "GroupInfo.group_list:`n" LoggingHelper.Dump(GroupInfo.group_list))
 	
 	return _log.Exit(GroupInfo.group_list.MaxIndex())
 }

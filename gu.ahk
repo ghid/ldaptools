@@ -18,7 +18,8 @@ class GroupUser {
     static dn := ""
     static filter := "*"
 
-	set_defaults() {
+	set_defaults()
+	{
 		return { count: ""
 			, append: ""
 			, color: false
@@ -116,10 +117,7 @@ class GroupUser {
 	{
 		_log := new Logger("app.gu." A_ThisFunc)
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("ldapFilter", ldapFilter)
-		}
+		_log.Logs(Logger.Input, "ldapFilter", ldapFilter)
 
 		if (!GroupUser.LDAP_CONN.Search(sr, "dc=viessmann,dc=net", ldapFilter) = Ldap.LDAP_SUCCESS)
 		{
@@ -133,10 +131,7 @@ class GroupUser {
 				. Ldap.Err2String(GroupUser.LDAP_CONN.GetLastError())))
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("iCount", iCount)
-		}
+		_log.Logs(Logger.Finest, "iCount", iCount)
 		if (iCount = 0)
 		{
 			throw _log.Exit(Exception("error: cn not found """ ldapFilter """"
@@ -156,10 +151,7 @@ class GroupUser {
 	{
 		_log := new Logger("class." A_ThisFunc)
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("text", text)
-		}
+		_log.Logs(Logger.Input, "text", text)
 
 		res := true
 		try
@@ -169,10 +161,7 @@ class GroupUser {
 				, (GroupUser.options.ignore_case = true ? true : false)
 				, GroupUser.options.invert_match))
 			{
-				if (_log.Logs(Logger.Finest))
-				{
-					_log.Finest("GroupUser.out_h", GroupUser.out_h)
-				}
+				_log.Logs(Logger.Finest, "GroupUser.out_h", GroupUser.out_h)
 				if (GroupUser.out_h)
 				{
 					GroupUser.out_h.WriteLine((!GroupUser.options.output
@@ -205,15 +194,9 @@ class GroupUser {
 		static l := 0
 		static user_list := []
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("groupcn", groupcn)
-		}
+		_log.Logs(Logger.Input, "groupcn", groupcn)
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("GroupUser.group_filter", GroupUser.group_filter)
-		}
+		_log.Logs(Logger.Finest, "GroupUser.group_filter", GroupUser.group_filter)
 		if (!GroupUser.LDAP_CONN.Search(sr, "dc=viessmann,dc=net"
 			, "(&(objectclass=" GroupUser.group_filter ")(cn=" groupcn "))") = Ldap.LDAP_SUCCESS)
 		{
@@ -227,10 +210,7 @@ class GroupUser {
 				. Ldap.Err2String(GroupUser.LDAP_CONN.GetLastError())))
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("iCount", iCount)
-		}
+		_log.Logs(Logger.Finest, "iCount", iCount)
 		loop %iCount%
 		{
 			if (A_Index = 1)
@@ -244,33 +224,21 @@ class GroupUser {
 			if (member)
 			{
 				pAttr := GroupUser.LDAP_CONN.FirstAttribute(member)
-				if (_log.Logs(Logger.Finest))
-				{
-					_log.Finest("pAttr", pAttr)
-				}
+				_log.Logs(Logger.Finest, "pAttr", pAttr)
 				while (pAttr)
 				{
 					System.StrCpy(pAttr, stAttr)
-					if (_log.Logs(Logger.Finest))
-					{
-						_log.Finest("stAttr", stAttr)
-					}
+					_log.Logs(Logger.Finest, "stAttr", stAttr)
 					if (stAttr = "member")
 					{
 						pValues := GroupUser.LDAP_CONN.GetValues(member, pAttr)
 						aValues := System.PtrListToStrArray(pValues)
-						if (_log.Logs(Logger.Finest))
-						{
-							_log.Finest("aValues:`n" LoggingHelper.Dump(aValues))
-						}
+						_log.Logs(Logger.Finest, "aValues:`n" LoggingHelper.Dump(aValues))
 						loop % aValues.MaxIndex()
 						{
 							if (RegExMatch(aValues[A_Index], "i)cn=(.+)\w*,\w*ou=.+\w*,.*$", $))
 							{
-								if (_log.Logs(Logger.Finest))
-								{
-									_log.Finest("$1", $1)
-								}
+								_log.Logs(Logger.Finest, "$1", $1)
 								if (GroupUser.ldap_is_group($1))
 								{
 									l++
@@ -303,18 +271,12 @@ class GroupUser {
 						break
 					}
 					pAttr := GroupUser.LDAP_CONN.NextAttribute(member)
-					if (_log.Logs(Logger.Finest))
-					{
-						_log.Finest("pAttr", pAttr)
-					}
+					_log.Logs(Logger.Finest, "pAttr", pAttr)
 				}
 			}
 		}
 
-		if (_log.Logs(Logger.Finest))
-		{
-			_log.Finest("user_list:`n" LoggingHelper.Dump(user_list))
-		}
+		_log.Logs(Logger.Finest, "user_list:`n" LoggingHelper.Dump(user_list))
 		
 		return _log.Exit(n)
 	}
@@ -323,10 +285,7 @@ class GroupUser {
 	{
 		_log := new Logger("app.gu." A_ThisFunc)
 		
-		if (_log.Logs(Logger.Input))
-		{
-			_log.Input("cn", cn)
-		}
+		_log.Logs(Logger.Input, "cn", cn)
 
 		if (!GroupUser.LDAP_CONN.Search(sr, "dc=viessmann,dc=net"
 			, "(&(objectclass=" GroupUser.group_filter ")(cn=" cn "))") = Ldap.LDAP_SUCCESS)
@@ -404,17 +363,40 @@ class GroupUser {
 		return _log.Exit(op)
 	}
 
+	do_checks(args)
+	{
+		_log := new Logger("class." A_ThisFunc)
+
+		if (_log.Logs(Logger.Input, "args", args))
+		{
+		    _log.Logs(Logger.Finest, "args:`n" LoggingHelper.Dump(args))
+		}
+		
+		if (args.MaxIndex() < 1)
+		{
+			throw Exception("error: Missing argument",, GroupUser.RC_MISSING_ARG)
+		}
+		if (GroupUser.options.output && GroupUser.options.append)
+		{
+			throw Exception("error: Options '-o' and '-a' cannot be used together"
+			,, GroupUser.RC_INVALID_ARGS)
+		}
+		if (GroupUser.options.upper && GroupUser.options.lower)
+		{
+			throw Exception("error: Options '-l' and '-u' cannot be used together"
+			,, GroupUser.RC_INVALID_ARGS)
+		}
+
+		return _log.Exit()
+	}
+
 	run(args)
     {
 		_log := new Logger("class." A_ThisFunc)
 		
-		if (_log.Logs(Logger.Input))
+		if (_log.Logs(Logger.Input, "args", args))
         {
-			_log.Input("args", args)
-			if (_log.Logs(Logger.Finest))
-            {
-				_log.Finest("args:`n" LoggingHelper.Dump(args))
-			}
+			_log.Logs(Logger.Finest, "args:`n" LoggingHelper.Dump(args))
 		}
 
 		try
@@ -440,20 +422,7 @@ class GroupUser {
                 return _log.Exit("")
 			}
 
-            if (args.MaxIndex() < 1)
-            {
-                throw Exception("error: Missing argument",, GroupUser.RC_MISSING_ARG)
-            }
-            if (GroupUser.options.output && GroupUser.options.append)
-            {
-                throw Exception("error: Options '-o' and '-a' cannot be used together"
-                    ,, GroupUser.RC_INVALID_ARGS)
-            }
-            if (GroupUser.options.upper && GroupUser.options.lower)
-            {
-                throw Exception("error: Options '-l' and '-u' cannot be used together"
-                    ,, GroupUser.RC_INVALID_ARGS)
-            }
+			GroupUser.do_checks(args)
 
             GroupUser.cn := args[1]
             if (args.MaxIndex() = 2)
@@ -475,11 +444,8 @@ class GroupUser {
                     && GroupUser.options.color <> true)
                 {
                     GroupUser.options.color := false
-                    if (_log.Logs(Logger.Warning))
-                    {
-                        _log.Warning("GroupUser.options.color has been set to false "
-                            . "because of file output")
-                    }
+                    _log.Logs(Logger.Warning, "GroupUser.options.color has been set to false "
+						. "because of file output")
                 }
             }
 
@@ -487,10 +453,7 @@ class GroupUser {
             {
                 GroupUser.group_filter := "ibm-nestedGroup"
             }
-            if (_log.Logs(Logger.Finest))
-            {
-                _log.Finest("GroupUser.group_filter", GroupUser.group_filter)
-            }
+            _log.Logs(Logger.Finest, "GroupUser.group_filter", GroupUser.group_filter)
 
             if (!GroupUser.options.count_only && !GroupUser.options.result_only)
             {
@@ -515,10 +478,7 @@ class GroupUser {
             {
                 GroupUser.out_h.Close()
             }
-            if (_log.Logs(Logger.Finest))
-            {
-                _log.Finest("GroupUser.out_h", GroupUser.out_h)
-            }
+            _log.Logs(Logger.Finest, "GroupUser.out_h", GroupUser.out_h)
             if (GroupUser.out_h)
             {
                 h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
@@ -553,10 +513,8 @@ class GroupUser {
 			{
 				file_name := "*"
 			}
-			if (_log.Logs(Logger.Info))
-			{
-				_log.Info("file_name", file_name)
-			}
+			
+			_log.Logs(Logger.Info, "file_name", file_name)
 			if (file_name = "*")
 			{
 				Ansi.Write(content)
@@ -581,10 +539,7 @@ class GroupUser {
 		}
 		finally
 		{
-			if (_log.Logs(Logger.Info))
-			{
-				_log.Info("Executing finally block")
-			}
+			_log.Logs(Logger.Info, "Executing finally block")
 			if (GroupUser.LDAP_CONN)
 			{
 				GroupUser.LDAP_CONN.Unbind()
@@ -597,7 +552,6 @@ class GroupUser {
 
 		return _log.Exit(rc)
 	}
-
 }
 
 #NoEnv										; NOTEST-BEGIN
