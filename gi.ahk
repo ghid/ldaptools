@@ -15,7 +15,6 @@ class GroupInfo {
 
 	static options := GroupInfo.setDefaults()
 
-	static dn := ""
 	static cn := ""
 	static capturedRegExGroups := []
 	static objectClassForGroupFilter := "groupOfNames"
@@ -163,8 +162,7 @@ class GroupInfo {
 			}
 			if (!GroupInfo.options.count_only
 					&& !GroupInfo.options.result_only) {
-				Ansi.writeLine("X" GroupInfo.formatOutput(GroupInfo.dn, ""), true)
-				Ansi.write("Connecting to " GroupInfo.options.host
+				Ansi.write("`nConnecting to " GroupInfo.options.host
 						. ":" GroupInfo.options.port " ... ")
 			}
 			returnCode := GroupInfo.main()
