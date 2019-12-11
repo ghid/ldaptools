@@ -17,8 +17,6 @@ class GroupInfo {
 
 	static dn := ""
 	static cn := ""
-	static filter := "*"
-	static tempFile := 0
 	static capturedRegExGroups := []
 	static objectClassForGroupFilter := "groupOfNames"
 
@@ -31,6 +29,7 @@ class GroupInfo {
 				, count: false
 				, count_only: false
 				, env_dummy: false
+				, filter: "*"
 				, group: ""
 				, help: false
 				, host: "localhost"
@@ -47,6 +46,7 @@ class GroupInfo {
 				, result_only: false
 				, short: false
 				, sort: false
+				, tempFile: 0
 				, upper: false
 				, version: false }
 	}
@@ -155,15 +155,15 @@ class GroupInfo {
 				GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
 			}
 			if (GroupInfo.options.regex) {
-				GroupInfo.filter := "(.*)"
+				GroupInfo.options.filter := "(.*)"
 			}
 			GroupInfo.cn := parsedArguments[1]
 			if (parsedArguments.maxIndex() = 2) {
-				GroupInfo.filter := parsedArguments[2]
+				GroupInfo.options.filter := parsedArguments[2]
 			}
 			if (!GroupInfo.options.count_only
 					&& !GroupInfo.options.result_only) {
-				Ansi.writeLine(GroupInfo.format_output(GroupInfo.dn, ""), true)
+				Ansi.writeLine("X" GroupInfo.formatOutput(GroupInfo.dn, ""), true)
 				Ansi.write("Connecting to " GroupInfo.options.host
 						. ":" GroupInfo.options.port " ... ")
 			}
@@ -177,8 +177,8 @@ class GroupInfo {
 			if (GroupInfo.ldapConnection) {
 				GroupInfo.ldapConnection.unbind()
 			}
-			if (GroupInfo.tempFile) {
-				GroupInfo.tempFile.close()
+			if (GroupInfo.options.tempFile) {
+				GroupInfo.options.tempFile.close()
 			}
 		}
 		return returnCode
@@ -212,7 +212,7 @@ class GroupInfo {
 		if (GroupInfo.options.sort
 				|| GroupInfo.options.output
 				|| GroupInfo.options.append) {
-			GroupInfo.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
+			GroupInfo.options.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
 			if ((GroupInfo.options.output || GroupInfo.options.append)
 					&& GroupInfo.options.color != true) {
 				GroupInfo.options.color := false
@@ -230,21 +230,22 @@ class GroupInfo {
 		}
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
 		if (!GroupInfo.options.count_only && !GroupInfo.options.result_only) {
-			Ansi.writeLine(GroupInfo.format_output(dn, ""), true)
+			Ansi.writeLine(GroupInfo.formatOutput(dn, ""), true)
 		}
 		if (!GroupInfo.options.ibm_all_groups) {
-			numberOfHits := GroupInfo.groupsInWhichDnIsMember(dn)
+			numberOfHits := GroupInfo.groupsInWhichDnIsMember(dn
+					, new GroupInfo.GroupData())
 		} else {
 			numberOfHits
 					:= GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
 		}
 
 		; Handle sort and/or output options; ---------------------------------
-		if (GroupInfo.tempFile) {
-			GroupInfo.tempFile.close()
+		if (GroupInfo.options.tempFile) {
+			GroupInfo.options.tempFile.close()
 		}
 		content := ""
-		if (GroupInfo.tempFile) {
+		if (GroupInfo.options.tempFile) {
 			h_gi := FileOpen(A_Temp "\__gi__.dat", "r`n")
 			content := h_gi.read(h_gi.length)
 			h_gi.close()
@@ -276,7 +277,7 @@ class GroupInfo {
 		return numberOfHits
 	}
 
-	format_output(text, ref) {
+	formatOutput(text, ref) {
 		if (GroupInfo.options.refs) {
 			if (GroupInfo.options.short) {
 				if (RegExMatch(ref, "^.*?=(.*?),.*$", $)) {
@@ -326,7 +327,7 @@ class GroupInfo {
 		try {
 			if (!GroupInfo.options.quiet
 					&& isOutputPrinted := Ansi.plainStr(text)
-					.filter(GroupInfo.filter, GroupInfo.options.regex
+					.filter(GroupInfo.options.filter, GroupInfo.options.regex
 					, (GroupInfo.options.ignore_case == true ? true : false)
 					, false
 					, match := "")) {
@@ -336,8 +337,9 @@ class GroupInfo {
 						text .= match[GroupInfo.capturedRegExGroups[A_Index]]
 					}
 				}
-				if (GroupInfo.tempFile) {
-					GroupInfo.tempFile.writeLine(((!GroupInfo.options.output
+				if (GroupInfo.options.tempFile) {
+					GroupInfo.options.tempFile.writeLine(((
+							!GroupInfo.options.output
 							&& !GroupInfo.options.append
 							&& !GroupInfo.options.result_only)
 							? "   " : "") text)
@@ -356,11 +358,7 @@ class GroupInfo {
 		return isOutputPrinted
 	}
 
-	groupsInWhichDnIsMember(memberDn) {
-		static numberOfGroups := 0
-		static nestedLevel := 0
-		static groupsOfDn := []
-
+	groupsInWhichDnIsMember(memberDn, groupData) {
 		if (!GroupInfo.ldapConnection.search(searchResult
 				, GroupInfo.options.base_dn
 				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
@@ -385,29 +383,29 @@ class GroupInfo {
 					throw Exception(Ldap.err2String(GroupInfo.ldapConnection
 							.getLastError()))
 				}
-				if (groupsOfDn[dn] == "" || GroupInfo.options.refs) {
-					if (GroupInfo.processOutput(GroupInfo.format_output(dn
+				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
+					if (GroupInfo.processOutput(GroupInfo.formatOutput(dn
 							, memberDn))) {
-						numberOfGroups++
+						groupData.numberOfGroups++
 					}
-					groupsOfDn[dn] := 1
+					groupData.groupsOfDn[dn] := 1
 				}
-				nestedLevel++
-				if (nestedLevel > GroupInfo.options.max_nested_lv) {
+				groupData.nestedLevel++
+				if (groupData.nestedLevel > GroupInfo.options.max_nested_lv) {
 					throw Exception("error: Cyclic reference detected: `n`t"
 							. dn "`n`t<- " memberDn,, RC_CYCLE_DETECTED)
 				}
-				GroupInfo.groupsInWhichDnIsMember(dn)
-				nestedLevel--
+				GroupInfo.groupsInWhichDnIsMember(dn, groupData)
+				groupData.nestedLevel--
 			}
 		}
-		return numberOfGroups
+		return groupData.numberOfGroups
 	}
 
 	findDnByFilter(ldapFilter) {
-		if (!GroupInfo.ldapConnection.search(searchResult
+		if (GroupInfo.ldapConnection.search(searchResult
 				, GroupInfo.options.base_dn
-				, ldapFilter) == Ldap.LDAP_SUCCESS) {
+				, ldapFilter) != Ldap.LDAP_SUCCESS) {
 			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
 		}
@@ -457,10 +455,16 @@ class GroupInfo {
 			numberOfGroups := groupsOfCn.maxIndex()
 			loop %numberOfGroups% {
 				GroupInfo.processOutput(GroupInfo
-						.format_output(groupsOfCn[A_Index], ""))
+						.formatOutput(groupsOfCn[A_Index], ""))
 			}
 		}
 		return numberOfGroups
+	}
+
+	class GroupData {
+		numberOfGroups := 0
+		nestedLevel := 0
+		groupsOfDn := []
 	}
 }
 
@@ -469,7 +473,7 @@ captureRegExGroupCallback(number, no_opt="") {
 	return GroupInfo.capturedRegExGroups.maxIndex()
 }
 
-#NoEnv ; NOTEST-BEGIN
+#NoEnv ; notest-begin
 #Warn All, StdOut
 ListLines Off
 SetBatchLines, -1
@@ -484,5 +488,5 @@ SetBatchLines, -1
 #Include <modules\structure\LDAPMod>
 
 Main:
-exitapp App.checkRequiredClasses(GroupInfo).run(A_Args) ; NOTEST-END
+exitapp App.checkRequiredClasses(GroupInfo).run(A_Args) ; notest-end
 ; vim:tw=0:ts=4:sts=4:sw=4:noet:ft=autohotkey:bomb

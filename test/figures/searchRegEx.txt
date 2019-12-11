@@ -1,0 +1,5 @@
+
+Connecting to localhost:10389 ... Ok.
+Snoopy
+   The Brown's Pets
+   Peanuts

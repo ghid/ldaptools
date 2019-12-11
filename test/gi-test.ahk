@@ -1,19 +1,23 @@
+; ahk: console
 ; ahk: x86
 #NoEnv
+#Warn All, StdOut
 SetBatchLines -1
-; #Warn All, OutputDebug
 
-#Include <logging>
-#Include <testcase>
-#Include <string>
-#Include <ansi>
-#Include <ldap>
+#Include <testcase-libs>
+#Include <Ldap>
 
-class gi_Test extends TestCase {
+class GroupInfoTest extends TestCase {
+
+	requires() {
+		return [TestCase, GroupInfo]
+	}
 
 	static SERVER := "localhost"
-		 , PORT := 10389
-		 , COVER_SERVICE := false
+	static PORT := 10389
+	static COVER_SERVICE := false
+	static output := A_TEMP "\gi-test.txt"
+	static figures := A_ScriptDir "\figures"
 
 	@BeforeClass_Setup() {
 		RC_OK             := -1
@@ -24,106 +28,203 @@ class gi_Test extends TestCase {
 		RC_CN_AMBIGOUS    := -6
 
 		G_LDAP_CONN := 0
+		Ansi.NO_BUFFER := true
 	}
 
+	; ahklint-ignore-begin: W002
 	@BeforeClass_CheckLDAPServer() {
-		for ldap_svc in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Service where Name='apacheds-default'") {
-			if (ldap_svc.State <> "Running") {
-				OutputDebug Starting apacheds-default service...
-				gi_test.COVER_SERVICE := true	
-				if ((ldap_rc := ldap_svc.StartService()) <> 0)
-					this.Fail("*** FATAL: apacheds-default service could not be startet: " ldap_rc,, true)
-				max_tries := 600
-				while (max_tries > 0 && ldap_svc.State <> "Running") {
-					sleep 100
-					for ldap_svc in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Service where Name='apacheds-default'")
-						break
-					max_tries--
+		for ldapService in ComObjGet("winmgmts:")
+				.execQuery("Select * from Win32_Service where Name='apacheds-default'") {
+			if (ldapService.state != "Running") {
+				TestCase.writeLine("Starting apacheds-default service...")
+				GroupInfoTest.COVER_SERVICE := true
+				if ((returnCode := ldapService.startService()) != 0) {
+					this.fail("*** FATAL: apacheds-default service could not be startet: " returnCode
+							,, true)
 				}
-				if (max_tries = 0)
-					this.Fail("*** FATAL: apacheds-default service could not be startet in an adequate time",, true)
-				else
-					OutputDebug apacheds-default service has been started
-			} else
-				OutputDebug apacheds-default service is already running
+				maxTries := 600
+				while (maxTries > 0 && ldapService.state != "Running") {
+					sleep 100
+					for ldapService in ComObjGet("winmgmts:")
+							.execQuery("Select * from Win32_Service where Name='apacheds-default'") {
+						break
+					}
+					maxTries--
+				}
+				if (maxTries == 0) {
+					this.fail("*** FATAL: apacheds-default service could not be startet in an adequate time"
+							,, true)
+				} else {
+					TestCase.writeLine("apacheds-default service has been started")
+				}
+			} else {
+				TestCase.writeLine("apacheds-default service is already running")
+			}
 			break
 		}
 	}
 
 	@AfterClass_TearDown() {
-		if (gi_test.COVER_SERVICE) {
-			for ldap_svc in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Service where Name='apacheds-default'") {
-				if (ldap_svc.State = "Running") {
-					OutputDebug Stopping apacheds-default service...
-					if ((ldap_rc := ldap_svc.StopService()) <> 0)
-						this.Fail("*** FATAL: apacheds-default service could not be stopped: " ldap_rc,, true)
-					max_tries := 600
-					while (max_tries > 0 && ldap_svc.State <> "Stopped") {
-						sleep 100
-						for ldap_svc in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Service where Name='apacheds-default'")
-							break
-						max_tries--
+		if (GroupInfoTest.COVER_SERVICE) {
+			for ldapService in ComObjGet("winmgmts:")
+					.execQuery("Select * from Win32_Service where Name='apacheds-default'") {
+				if (ldapService.state = "Running") {
+					TestCase.writeLine("Stopping apacheds-default service...")
+					if ((returnCode := ldapService.stopService()) != 0) {
+						this.fail("*** FATAL: apacheds-default service could not be stopped: " returnCode
+								,, true)
 					}
-					if (max_tries = 0)
-						this.Fail("*** FATAL: apacheds-default service could not be stopped in an adequate time",, true)
-					else
-						OutputDebug apacheds-default service has been stopped
-				} else
-					OutputDebug apacheds-default service has already been stopped
+					maxTries := 600
+					while (maxTries > 0 && ldapService.state != "Stopped") {
+						sleep 100
+						for ldapService in ComObjGet("winmgmts:")
+								.execQuery("Select * from Win32_Service where Name='apacheds-default'") {
+							break
+						}
+						maxTries--
+					}
+					if (maxTries = 0) {
+						this.fail("*** FATAL: apacheds-default service could not be stopped in an adequate time"
+								,, true)
+					} else {
+						TestCase.writeLine("apacheds-default service has been stopped")
+					}
+				} else {
+					TestCase.writeLine("apacheds-default service has already been stopped")
+				}
 				break
 			}
 		}
 	}
+	; ahklint-ignore-end
 
-	; @Test_CheckLdapData() {
-	; 	ld := new Ldap(gi_test.SERVER, gi_test.PORT)	
-	; 	ld.Connect()
-	; 	ld.Search("cn=peanuts,dc=example,dc=com"
-	; 	ld.Unbind()
-	; }
-
-	@Before_ResetOpts() {
-		G_append := ""
-		G_base_dn := ""
-		G_cn := ""
-		G_color := -1
-		G_count := 0
-		G_count_only := 0
-		G_filter := "*"
-		G_group := 0
-		G_group_list := []
-		G_groupfilter := "groupOfNames"
-		G_help  := 0
-		G_host := gi_test.SERVER
-		G_ibm_all_groups := 0
-		G_ibm_nested_group := 0
-		G_ignore_case := -1
-		G_lower := 0
-		G_max_nested_lv := 32
-		G_out_h := 0
-		G_output := ""
-		G_port := gi_test.PORT
-		G_quiet := 1
-		G_refs := 0
-		G_regex := 0
-		G_result_only := 1
-		G_short := 0
-		G_sort := 0
-		G_upper := 0
-		G_version := 0
-
-		G_member_list := []
-		G_scanned_group := []
-		G_out_file_name := ""
-		G_group_list := []
+	@Before_redirStdOut() {
+		Ansi.stdOut := FileOpen(A_Temp "\gi-test.txt", "w `n")
 	}
 
-	@Test_Case1() {
-		G_cn := "Linus van Pelt"
-		this.AssertEquals(main(), 2)
+	@After_redirStdOut() {
+		Ansi.stdOut.close()
+		Ansi.stdOut := Ansi.__initStdOut()
+		FileDelete %A_Temp%\gi-test.txt
+	}
+
+	@Before_ResetOpts() {
+		GroupInfo.options := GroupInfo.setDefaults()
+		EnvSet GI_OPTIONS,
+	}
+
+	@Test_evaluateCommandLineOptions() {
+		this.assertException(GroupInfo, "evaluateCommandLineOptions",,, [])
+		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.Options.output := true
+		GroupInfo.Options.append := true
+		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
+				, ["xxx"])
+		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.Options.lower := true
+		GroupInfo.Options.upper := true
+		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
+				, ["xxx"])
+		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.Options.ibm_all_groups := true
+		GroupInfo.Options.ibm_nested_group := true
+		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
+				, ["xxx"])
+	}
+
+	@Test_usage() {
+		this.assertEquals(GroupInfo.run(["--help"]), "")
+		this.assertEquals(TestCase.fileContent(GroupInfoTest
+				.figures "\usage.txt")
+				, TestCase.fileContent(GroupInfoTest.output))
+	}
+
+	@Test_simple() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest
+				.figures "\simple.txt")
+				, TestCase.fileContent(GroupInfoTest.output))
+	}
+
+	@Test_simpleUpperCase() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-u", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest
+				.figures "\simpleUpperCase.txt")
+				, TestCase.fileContent(GroupInfoTest.output))
+	}
+
+	@Test_short() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures "\short.txt"))
+	}
+
+	@Test_count() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-c", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures "\count.txt"))
+	}
+
+	@Test_withRefs() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-r", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures "\withRefs.txt"))
+	}
+
+	@Test_shortWithRefs() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-r1", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\shortWithRefs.txt"))
+	}
+
+	@Test_withRefsNoColor() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-r", "--no-color"
+				, "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\withRefsNoColor.txt"))
+	}
+
+	@Test_search() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1i", "snoopy"
+				, "*own*"]), 2)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures "\search.txt"))
+	}
+
+	@Test_searchRegEx() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1e", "snoopy"
+				, "\ws$"]), 2)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\searchRegEx.txt"))
+	}
+
+	@Test_resultOnly() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1R", "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\resultOnly.txt"))
+	}
+
+	@Test_resultOnlySorted() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1R", "--sort"
+				, "snoopy"]), 3)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\resultOnlySorted.txt"))
+	}
+
+	@Test_printGroups() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-g", "2", "-g", "1"
+				, "snoopy", "(The\s)+([\w']+)"]), 2)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\printGroups.txt"))
 	}
 }
 
-exitapp gi_Test.RunTests()
+exitapp GroupInfoTest.runTests()
 
 #Include %A_ScriptDir%\..\gi.ahk

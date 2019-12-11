@@ -1,0 +1,36 @@
+usage: gi [-a <filename> | -o <filename>] [options] <cn> [filter]
+
+    -a, --append <file-name>
+                          Append result to existing file
+    -o <file-name>        Write result to file
+
+Options
+    -1, --short           Display group names instead of the DN
+    -c, --count           Display number of hits
+    -C, --count-only      Return the number of hits as exit code; no other output
+    -e, --regex           Use a regular expression to filter the result set (see also
+                          http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)
+    -h, --host <host-name>
+                          Hostname of the LDAP server (default=localhost)
+    -p, --port <portnum>  Port number of the LDAP server (default=389)
+    -b, --base-dn <basedn>
+                          Base DN to start the search
+    -g, --group <number>  Return the group of regex evaluation as result (implies -e)
+    -i, --ignore-case     Ignore case when filtering results
+    -l, --lower           Display result in lower case characters
+    -u, --upper           Display result in upper case characters
+    -r, --refs            Display group relations
+    -s, --sort            Sort result
+    --[no]color           Colored output (deactivated by default if -a or -o option is
+                          set)
+    -R, --result-only     Suppress any other output than the found groups
+    --ibm-nested-group    Only show groups which implement objectclass ibm-nestedGroup
+    --ibm-all-groups      Use 'ibm_allgroups' to retrieve data
+    --max-nested-level <n>
+                          Defines, which recursion depth terminates the process
+                          (default=32)
+    --[no]env             Ignore environment variable GI_OPTIONS
+    -q, --quiet           Suppress output of results
+    --version             Print version info
+
+

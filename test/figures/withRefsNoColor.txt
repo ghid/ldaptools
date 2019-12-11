@@ -1,0 +1,6 @@
+  <-()
+Connecting to localhost:10389 ... Ok.
+cn=Snoopy,dc=example,dc=com  <-()
+   cn=The Brown's Pets,ou=groups,dc=example,dc=com  <-(cn=Snoopy,dc=example,dc=com)
+   cn=The Brown's,ou=groups,dc=example,dc=com  <-(cn=The Brown's Pets,ou=groups,dc=example,dc=com)
+   cn=Peanuts,ou=groups,dc=example,dc=com  <-(cn=The Brown's,ou=groups,dc=example,dc=com)

@@ -1,0 +1,6 @@
+
+Connecting to localhost:10389 ... Ok.
+[32;1mCN=[0mSNOOPY,[32;1mDC=[0mEXAMPLE,[32;1mDC=[0mCOM
+   [32;1mCN=[0mTHE BROWN'S PETS,[32;1mOU=[0mGROUPS,[32;1mDC=[0mEXAMPLE,[32;1mDC=[0mCOM
+   [32;1mCN=[0mTHE BROWN'S,[32;1mOU=[0mGROUPS,[32;1mDC=[0mEXAMPLE,[32;1mDC=[0mCOM
+   [32;1mCN=[0mPEANUTS,[32;1mOU=[0mGROUPS,[32;1mDC=[0mEXAMPLE,[32;1mDC=[0mCOM
