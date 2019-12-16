@@ -1,0 +1,10 @@
+Connecting to localhost:10389...
+Ok.
+cn=Peanuts,ou=groups,dc=example,dc=com  <-()
+	 cn=Peppermint Patty,dc=example,dc=com  <-(cn=Some Others,ou=groups,dc=example,dc=com)
+	 cn=Charlie Brown,dc=example,dc=com  <-(cn=The Brown's,ou=groups,dc=example,dc=com)
+	 cn=Sally Brown,dc=example,dc=com  <-(cn=The Brown's,ou=groups,dc=example,dc=com)
+	 cn=Snoopy,dc=example,dc=com  <-(cn=The Brown's Pets,ou=groups,dc=example,dc=com)
+	 cn=Woodstock,dc=example,dc=com  <-(cn=The Brown's Pets,ou=groups,dc=example,dc=com)
+	 cn=Linus van Pelt,dc=example,dc=com  <-(cn=The van Pelt's,ou=groups,dc=example,dc=com)
+	 cn=Lucy van Pelt,dc=example,dc=com  <-(cn=The van Pelt's,ou=groups,dc=example,dc=com)

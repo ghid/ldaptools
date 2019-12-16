@@ -168,6 +168,7 @@ class GroupInfo {
 			returnCode := GroupInfo.main()
 		}
 		catch gotException {
+			OutputDebug % gotException.what " " gotException.file " " gotException.line
 			Ansi.writeLine(gotException.message)
 			Ansi.writeLine(optionParser.usage())
 		}

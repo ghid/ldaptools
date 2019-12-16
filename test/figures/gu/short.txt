@@ -1,0 +1,10 @@
+Connecting to localhost:10389...
+Ok.
+Peanuts
+	 Peppermint Patty
+	 Charlie Brown
+	 Sally Brown
+	 Snoopy
+	 Woodstock
+	 Linus van Pelt
+	 Lucy van Pelt

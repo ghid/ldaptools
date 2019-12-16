@@ -1,0 +1,12 @@
+Connecting to localhost:10389...
+Ok.
+[32;1mcn=[0mPeanuts,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mPeppermint Patty,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mCharlie Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mSally Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mSnoopy,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mWoodstock,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mLinus van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+	 [32;1mcn=[0mLucy van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom
+
+7 Hit(s)

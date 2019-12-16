@@ -17,7 +17,7 @@ class GroupInfoTest extends TestCase {
 	static PORT := 10389
 	static COVER_SERVICE := false
 	static output := A_TEMP "\gi-test.txt"
-	static figures := A_ScriptDir "\figures"
+	static figures := A_ScriptDir "\figures\gi"
 
 	@BeforeClass_Setup() {
 		RC_OK             := -1
