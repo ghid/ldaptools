@@ -259,17 +259,8 @@ class GroupInfo {
 				GroupInfo.options.color := false
 			}
 		}
-		GroupInfo.ldapConnection := new Ldap(GroupInfo.options.host
-				, GroupInfo.options.port)
-		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-		GroupInfo.ldapConnection.connect()
-		if ( !GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine("Ok.")
-		}
+		GroupInfo.connectToLdapServer()
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
-		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine(GroupInfo.formatOutput(dn, ""), true)
-		}
 		if (!GroupInfo.options.ibmAllGroups) {
 			numberOfHits := GroupInfo.groupsInWhichDnIsMember(dn
 					, new GroupInfo.GroupData())
@@ -313,6 +304,16 @@ class GroupInfo {
 			Ansi.writeLine("`n" numberOfHits " Hit(s)")
 		}
 		return numberOfHits
+	}
+
+	connectToLdapServer() {
+		GroupInfo.ldapConnection := new Ldap(GroupInfo.options.host
+				, GroupInfo.options.port)
+		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
+		GroupInfo.ldapConnection.connect()
+		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
+			Ansi.writeLine("Ok.")
+		}
 	}
 
 	formatOutput(text, ref) {
@@ -461,7 +462,11 @@ class GroupInfo {
 					. """" ldapFilter """",, RC_CN_AMBIGOUS)
 		}
 		entry := GroupInfo.ldapConnection.firstEntry(searchResult)
-		return GroupInfo.ldapConnection.getDn(entry)
+		dn := GroupInfo.ldapConnection.getDn(entry)
+		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
+			Ansi.writeLine(GroupInfo.formatOutput(dn, ""))
+		}
+		return dn
 	}
 
 	groupsOfCnByUsingIbmAllGroups(cn) {
