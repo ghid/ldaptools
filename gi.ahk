@@ -267,22 +267,7 @@ class GroupInfo {
 				: GroupInfo.groupsInWhichDnIsMember(dn
 				, new GroupInfo.GroupData))
 		if (GroupInfo.tempFileWasNecessary()) {
-			content := GroupInfo.readContentFromTempFileAndDeleteIt()
-			if (GroupInfo.options.append) {
-				file_name := GroupInfo.options.append
-			} else if (GroupInfo.options.output) {
-				file_name := GroupInfo.options.output
-				if (FileExist(file_name)) {
-					FileDelete %file_name%
-				}
-			} else {
-				file_name := "*"
-			}
-			if (file_name = "*") {
-				Ansi.write(content)
-			} else {
-				FileAppend %content%, %file_name%
-			}
+			GroupInfo.distributeOutput()
 		}
 		return numberOfHits
 	}
@@ -468,6 +453,28 @@ class GroupInfo {
 
 	tempFileWasNecessary() {
 		return IsObject(GroupInfo.options.tempFile)
+	}
+
+	distributeOutput() {
+		fileName := "*"
+		if (GroupInfo.options.append) {
+			fileName := GroupInfo.options.append
+		} else if (GroupInfo.options.output) {
+			fileName := GroupInfo.options.output
+			if (FileExist(fileName)) {
+				FileDelete %fileName%
+			}
+		}
+		GroupInfo.writeOutput(fileName)
+	}
+
+	writeOutput(fileName) {
+		content := GroupInfo.readContentFromTempFileAndDeleteIt()
+		if (fileName = "*") {
+			Ansi.write(content)
+		} else {
+			FileAppend %content%, %fileName%
+		}
 	}
 
 	class GroupData {
