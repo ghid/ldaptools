@@ -250,15 +250,7 @@ class GroupInfo {
 	}
 
 	main() {
-		if (GroupInfo.options.sort
-				|| GroupInfo.options.output
-				|| GroupInfo.options.append) {
-			GroupInfo.options.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
-			if ((GroupInfo.options.output || GroupInfo.options.append)
-					&& GroupInfo.options.color != true) {
-				GroupInfo.options.color := false
-			}
-		}
+		GroupInfo.openTempFileIfNecessary()
 		GroupInfo.connectToLdapServer()
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
 		numberOfHits := (GroupInfo.options.ibmAllGroups
@@ -456,6 +448,18 @@ class GroupInfo {
 		}
 		FileDelete %A_Temp%\__gi__.dat
 		return content
+	}
+
+	openTempFileIfNecessary() {
+		if (GroupInfo.options.sort
+				|| GroupInfo.options.output
+				|| GroupInfo.options.append) {
+			if ((GroupInfo.options.output || GroupInfo.options.append)
+					&& GroupInfo.options.color != true) {
+				GroupInfo.options.color := false
+			}
+			GroupInfo.options.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
+		}
 	}
 
 	class GroupData {
