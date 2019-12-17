@@ -27,7 +27,7 @@ class GroupInfo {
 				, color: false
 				, count: false
 				, countOnly: false
-				, env_dummy: false
+				, useEnvironmentVariables: false
 				, filter: "*"
 				, group: ""
 				, help: false
@@ -115,7 +115,8 @@ class GroupInfo {
 				. "(default=32)"
 				,, GroupInfo.options.max_nested_lv
 				, GroupInfo.options.max_nested_lv))
-		op.add(new OptParser.Boolean(0, "env", GroupInfo.options, "env_dummy"
+		op.add(new OptParser.Boolean(0, "env"
+				, GroupInfo.options, "useEnvironmentVariables"
 				, "Ignore environment variable GI_OPTIONS"
 				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
 		op.add(new OptParser.Boolean("q", "quiet", GroupInfo.options, "quiet"
