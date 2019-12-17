@@ -20,12 +20,13 @@ class GroupInfoTest extends TestCase {
 	static figures := A_ScriptDir "\figures\gi"
 
 	@BeforeClass_Setup() {
-		RC_OK             := -1
-	    RC_MISSING_ARG    := -2
-	    RC_INVALID_ARGS   := -3
+		RC_OK := -1
+	    RC_MISSING_ARG := -2
+	    RC_INVALID_ARGS := -3
 		RC_CYCLE_DETECTED := -4
-		RC_CN_NOT_FOUND   := -5
-		RC_CN_AMBIGOUS    := -6
+		RC_CN_NOT_FOUND := -5
+		RC_CN_AMBIGOUS := -6
+		RC_TOO_MANY_ARGS := -8
 
 		G_LDAP_CONN := 0
 		Ansi.NO_BUFFER := true
@@ -115,6 +116,8 @@ class GroupInfoTest extends TestCase {
 
 	@Test_evaluateCommandLineOptions() {
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,, [])
+		this.assertException(GroupInfo, "evaluateCommandLineOptions"
+				,,, ["one", "two", "three"])
 		GroupInfo.options := GroupInfo.setDefaults()
 		GroupInfo.Options.output := true
 		GroupInfo.Options.append := true

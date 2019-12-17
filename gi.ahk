@@ -12,6 +12,7 @@ class GroupInfo {
 	static RC_CYCLE_DETECTED := -4
 	static RC_CN_NOT_FOUND := -5
 	static RC_CN_AMBIGOUS := -6
+	static RC_TOO_MANY_ARGS := -7
 
 	static options := GroupInfo.setDefaults()
 
@@ -146,7 +147,8 @@ class GroupInfo {
 			}
 		}
 		catch gotException {
-			OutputDebug % gotException.what " " gotException.file " " gotException.line
+			OutputDebug % gotException.what
+					. "`nin: " gotException.file " #" gotException.line
 			Ansi.writeLine(gotException.message)
 			Ansi.writeLine(optionParser.usage())
 		}
@@ -171,23 +173,30 @@ class GroupInfo {
 	}
 
 	evaluateCommandLineOptions(parsedArguments) {
-		; @todo: Throw exception for more than two arguments
-		if (parsedArguments.maxIndex() < 1) {
+		if (parsedArguments.count() < 1) {
 			throw Exception("error: Missing argument"
 					,, GroupInfo.RC_MISSING_ARG)
-		} else if (GroupInfo.options.output && GroupInfo.options.append) {
+		}
+		if (parsedArguments.count() > 2) {
+			throw Exception("error: Too many arguments"
+					,, GroupInfo.RC_TOO_MANY_ARGS)
+		}
+		if (GroupInfo.options.output && GroupInfo.options.append) {
 			throw Exception("error: Options '-o' and '-a' "
 					. "cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
-		} else if (GroupInfo.options.upper && GroupInfo.options.lower) {
+		}
+		if (GroupInfo.options.upper && GroupInfo.options.lower) {
 			throw Exception("error: Options '-l' and '-u' "
 					. " cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
-		} else if (GroupInfo.options.ibmAllGroups && GroupInfo.options.refs) {
+		}
+		if (GroupInfo.options.ibmAllGroups && GroupInfo.options.refs) {
 			throw Exception("error: Options '-r' and '--ibm-all-groups' "
 					. "cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
-		} else if (GroupInfo.options.ibmAllGroups
+		}
+		if (GroupInfo.options.ibmAllGroups
 				&& GroupInfo.options.ibmNestedGroups) {
 			throw Exception("error: Options '--ibm-nested-group' and "
 					. " '--ibm-all-groups' cannot be used together"
