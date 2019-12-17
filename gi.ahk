@@ -33,7 +33,7 @@ class GroupInfo {
 				, help: false
 				, host: "localhost"
 				, ibm_all_groups: false
-				, ibm_nested_group: false
+				, ibmNestedGroups: false
 				, ignore_case: -1
 				, lower: false
 				, max_nested_lv: 32
@@ -104,7 +104,7 @@ class GroupInfo {
 				, "result_only"
 				, "Suppress any other output than the found groups"))
 		op.add(new OptParser.Boolean(0, "ibm-nested-group", GroupInfo.options
-				, "ibm_nested_group"
+				, "ibmNestedGroups"
 				, "Only show groups which implement "
 				. "objectclass ibm-nestedGroup"))
 		op.add(new OptParser.Boolean(0, "ibm-all-groups", GroupInfo.options
@@ -193,7 +193,7 @@ class GroupInfo {
 					. "cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
 		} else if (GroupInfo.options.ibm_all_groups
-				&& GroupInfo.options.ibm_nested_group) {
+				&& GroupInfo.options.ibmNestedGroups) {
 			throw Exception("error: Options '--ibm-nested-group' and "
 					. " '--ibm-all-groups' cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
@@ -210,7 +210,7 @@ class GroupInfo {
 	}
 
 	handleIBMnestedGroups() {
-		if (GroupInfo.options.ibm_nested_group) {
+		if (GroupInfo.options.ibmNestedGroups) {
 			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
 		}
 	}
@@ -225,7 +225,7 @@ class GroupInfo {
 				GroupInfo.options.color := false
 			}
 		}
-		if (GroupInfo.options.ibm_nested_group) {
+		if (GroupInfo.options.ibmNestedGroups) {
 			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
 		}
 		GroupInfo.ldapConnection := new Ldap(GroupInfo.options.host

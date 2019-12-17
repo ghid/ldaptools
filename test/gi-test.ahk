@@ -127,7 +127,7 @@ class GroupInfoTest extends TestCase {
 				, ["xxx"])
 		GroupInfo.options := GroupInfo.setDefaults()
 		GroupInfo.Options.ibm_all_groups := true
-		GroupInfo.Options.ibm_nested_group := true
+		GroupInfo.Options.ibmNestedGroups := true
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
 				, ["xxx"])
 	}
