@@ -261,13 +261,10 @@ class GroupInfo {
 		}
 		GroupInfo.connectToLdapServer()
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
-		if (!GroupInfo.options.ibmAllGroups) {
-			numberOfHits := GroupInfo.groupsInWhichDnIsMember(dn
-					, new GroupInfo.GroupData())
-		} else {
-			numberOfHits
-					:= GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
-		}
+		numberOfHits := (GroupInfo.options.ibmAllGroups
+				? GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
+				: GroupInfo.groupsInWhichDnIsMember(dn
+				, new GroupInfo.GroupData))
 
 		; Handle sort and/or output options; ---------------------------------
 		if (GroupInfo.options.tempFile) {
