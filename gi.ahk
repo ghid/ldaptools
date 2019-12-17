@@ -259,10 +259,7 @@ class GroupInfo {
 				, new GroupInfo.GroupData))
 
 		; Handle sort and/or output options; ---------------------------------
-		content := ""
-		if (GroupInfo.options.tempFile) {
-			content := GroupInfo.readContentFromTempFileAndDeleteIt()
-		}
+		content := GroupInfo.readContentFromTempFileAndDeleteIt()
 		if (GroupInfo.options.append) {
 			file_name := GroupInfo.options.append
 		} else if (GroupInfo.options.output) {
@@ -278,7 +275,6 @@ class GroupInfo {
 		} else {
 			FileAppend %content%, %file_name%
 		}
-		content := ""
 		if (GroupInfo.options.count) {
 			Ansi.writeLine("`n" numberOfHits " Hit(s)")
 		}
@@ -439,14 +435,17 @@ class GroupInfo {
 	}
 
 	readContentFromTempFileAndDeleteIt() {
-		GroupInfo.options.tempFile.close()
-		tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
-		content := tempFile.read(tempFile.length)
-		tempFile.close()
-		if (GroupInfo.options.sort) {
-			Sort content
+		content := ""
+		if (GroupInfo.options.tempFile) {
+			GroupInfo.options.tempFile.close()
+			tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
+			content := tempFile.read(tempFile.length)
+			tempFile.close()
+			if (GroupInfo.options.sort) {
+				Sort content
+			}
+			FileDelete %A_Temp%\__gi__.dat
 		}
-		FileDelete %A_Temp%\__gi__.dat
 		return content
 	}
 
