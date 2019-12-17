@@ -360,11 +360,9 @@ class GroupInfo {
 					.ldapConnection.getLastError()))
 		}
 		loop %numberOfEntriesFound% {
-			if (A_Index = 1) {
-				member := GroupInfo.ldapConnection.firstEntry(searchResult)
-			} else {
-				member := GroupInfo.ldapConnection.nextEntry(member)
-			}
+			member := (A_Index == 1
+					? GroupInfo.ldapConnection.firstEntry(searchResult)
+					: GroupInfo.ldapConnection.nextEntry(member))
 			if (member) {
 				if (!(dn := GroupInfo.ldapConnection.getDn(member))) {
 					throw Exception(Ldap.err2String(GroupInfo.ldapConnection
