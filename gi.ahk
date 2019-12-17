@@ -259,9 +259,6 @@ class GroupInfo {
 				GroupInfo.options.color := false
 			}
 		}
-		if (GroupInfo.options.ibmNestedGroups) {
-			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
-		}
 		GroupInfo.ldapConnection := new Ldap(GroupInfo.options.host
 				, GroupInfo.options.port)
 		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
