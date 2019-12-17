@@ -315,18 +315,7 @@ class GroupInfo {
 
 	formatOutput(text, ref) {
 		ref := GroupInfo.formatRef(ref)
-		if (GroupInfo.options.short) {
-			if (RegExMatch(text, "^.*?=(.*?),.*$", $)) {
-				text := $1
-			}
-		}
-		if (GroupInfo.options.upper) {
-			text := text.upper()
-			ref := ref.upper()
-		} else if (GroupInfo.options.lower) {
-			text := text.lower()
-			ref := ref.lower()
-		}
+		text := GroupInfo.formatText(text)
 		if (GroupInfo.options.color) {
 			text := RegExReplace(text, "(?P<attr>\w+=)"
 					, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
@@ -353,11 +342,22 @@ class GroupInfo {
 	formatRef(ref) {
 		if (GroupInfo.options.refs) {
 			if (GroupInfo.options.short) {
-				return GroupInfo.compactEntry(ref)
+				ref := GroupInfo.compactEntry(ref)
 			}
-			return ref
+			return Format("{:" (GroupInfo.options.upper ? "U"
+					: GroupInfo.options.lower ? "L"
+					: "s") "}", ref)
 		}
 		return ""
+	}
+
+	formatText(text) {
+		if (GroupInfo.options.short) {
+			text := GroupInfo.compactEntry(text)
+		}
+		return Format("{:" (GroupInfo.options.upper ? "U"
+				: GroupInfo.options.lower ? "L"
+				: "s") "}", text)
 	}
 
 	compactEntry(entry) {
