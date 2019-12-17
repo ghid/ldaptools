@@ -149,11 +149,7 @@ class GroupInfo {
 			GroupInfo.handleIBMnestedGroups()
 			GroupInfo.handleRegExFilter()
 			GroupInfo.handleParsedArguments(parsedArguments)
-			if (!GroupInfo.options.countOnly
-					&& !GroupInfo.options.resultOnly) {
-				Ansi.write("`nConnecting to " GroupInfo.options.host
-						. ":" GroupInfo.options.port " ... ")
-			}
+			GroupInfo.handleCountOnly()
 			returnCode := GroupInfo.main()
 		}
 		catch gotException {
@@ -162,12 +158,7 @@ class GroupInfo {
 			Ansi.writeLine(optionParser.usage())
 		}
 		finally {
-			if (GroupInfo.ldapConnection) {
-				GroupInfo.ldapConnection.unbind()
-			}
-			if (GroupInfo.options.tempFile) {
-				GroupInfo.options.tempFile.close()
-			}
+			GroupInfo.doCleanup()
 		}
 		return returnCode
 	}
@@ -222,6 +213,23 @@ class GroupInfo {
 	handleRegExFilter() {
 		if (GroupInfo.options.regex) {
 			GroupInfo.options.filter := "(.*)"
+		}
+	}
+
+	handleCountOnly() {
+		if (!GroupInfo.options.countOnly
+				&& !GroupInfo.options.resultOnly) {
+			Ansi.write("`nConnecting to " GroupInfo.options.host
+					. ":" GroupInfo.options.port " ... ")
+		}
+	}
+
+	doCleanup() {
+		if (GroupInfo.ldapConnection) {
+			GroupInfo.ldapConnection.unbind()
+		}
+		if (GroupInfo.options.tempFile) {
+			GroupInfo.options.tempFile.close()
 		}
 	}
 
