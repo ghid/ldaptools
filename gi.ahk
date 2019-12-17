@@ -266,23 +266,23 @@ class GroupInfo {
 				? GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
 				: GroupInfo.groupsInWhichDnIsMember(dn
 				, new GroupInfo.GroupData))
-
-		; Handle sort and/or output options; ---------------------------------
-		content := GroupInfo.readContentFromTempFileAndDeleteIt()
-		if (GroupInfo.options.append) {
-			file_name := GroupInfo.options.append
-		} else if (GroupInfo.options.output) {
-			file_name := GroupInfo.options.output
-			if (FileExist(file_name)) {
-				FileDelete %file_name%
+		if (GroupInfo.tempFileWasNecessary()) {
+			content := GroupInfo.readContentFromTempFileAndDeleteIt()
+			if (GroupInfo.options.append) {
+				file_name := GroupInfo.options.append
+			} else if (GroupInfo.options.output) {
+				file_name := GroupInfo.options.output
+				if (FileExist(file_name)) {
+					FileDelete %file_name%
+				}
+			} else {
+				file_name := "*"
 			}
-		} else {
-			file_name := "*"
-		}
-		if (file_name = "*") {
-			Ansi.write(content)
-		} else {
-			FileAppend %content%, %file_name%
+			if (file_name = "*") {
+				Ansi.write(content)
+			} else {
+				FileAppend %content%, %file_name%
+			}
 		}
 		return numberOfHits
 	}
@@ -443,16 +443,14 @@ class GroupInfo {
 
 	readContentFromTempFileAndDeleteIt() {
 		content := ""
-		if (GroupInfo.options.tempFile) {
-			GroupInfo.options.tempFile.close()
-			tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
-			content := tempFile.read(tempFile.length)
-			tempFile.close()
-			if (GroupInfo.options.sort) {
-				Sort content
-			}
-			FileDelete %A_Temp%\__gi__.dat
+		GroupInfo.options.tempFile.close()
+		tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
+		content := tempFile.read(tempFile.length)
+		tempFile.close()
+		if (GroupInfo.options.sort) {
+			Sort content
 		}
+		FileDelete %A_Temp%\__gi__.dat
 		return content
 	}
 
@@ -466,6 +464,10 @@ class GroupInfo {
 			}
 			GroupInfo.options.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
 		}
+	}
+
+	tempFileWasNecessary() {
+		return IsObject(GroupInfo.options.tempFile)
 	}
 
 	class GroupData {
