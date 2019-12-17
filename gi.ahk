@@ -469,7 +469,6 @@ class GroupInfo {
 
 captureRegExGroupCallback(number, no_opt="") {
 	GroupInfo.capturedRegExGroups.push(number)
-	return GroupInfo.capturedRegExGroups.maxIndex()
 }
 
 #NoEnv ; notest-begin
