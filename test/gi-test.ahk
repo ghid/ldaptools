@@ -126,7 +126,7 @@ class GroupInfoTest extends TestCase {
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
 				, ["xxx"])
 		GroupInfo.options := GroupInfo.setDefaults()
-		GroupInfo.Options.ibm_all_groups := true
+		GroupInfo.Options.ibmAllGroups := true
 		GroupInfo.Options.ibmNestedGroups := true
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
 				, ["xxx"])

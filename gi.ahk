@@ -32,7 +32,7 @@ class GroupInfo {
 				, group: ""
 				, help: false
 				, host: "localhost"
-				, ibm_all_groups: false
+				, ibmAllGroups: false
 				, ibmNestedGroups: false
 				, ignore_case: -1
 				, lower: false
@@ -108,7 +108,7 @@ class GroupInfo {
 				, "Only show groups which implement "
 				. "objectclass ibm-nestedGroup"))
 		op.add(new OptParser.Boolean(0, "ibm-all-groups", GroupInfo.options
-				, "ibm_all_groups", "Use 'ibm_allgroups' to retrieve data"))
+				, "ibmAllGroups", "Use 'ibm_allgroups' to retrieve data"))
 		op.add(new OptParser.String(0, "max-nested-level", GroupInfo.options
 				, "max_nested_lv", "n"
 				, "Defines, which recursion depth terminates the process "
@@ -189,11 +189,11 @@ class GroupInfo {
 			throw Exception("error: Options '-l' and '-u' "
 					. " cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
-		} else if (GroupInfo.options.ibm_all_groups && GroupInfo.options.refs) {
+		} else if (GroupInfo.options.ibmAllGroups && GroupInfo.options.refs) {
 			throw Exception("error: Options '-r' and '--ibm-all-groups' "
 					. "cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
-		} else if (GroupInfo.options.ibm_all_groups
+		} else if (GroupInfo.options.ibmAllGroups
 				&& GroupInfo.options.ibmNestedGroups) {
 			throw Exception("error: Options '--ibm-nested-group' and "
 					. " '--ibm-all-groups' cannot be used together"
@@ -240,7 +240,7 @@ class GroupInfo {
 		if (!GroupInfo.options.countOnly && !GroupInfo.options.result_only) {
 			Ansi.writeLine(GroupInfo.formatOutput(dn, ""), true)
 		}
-		if (!GroupInfo.options.ibm_all_groups) {
+		if (!GroupInfo.options.ibmAllGroups) {
 			numberOfHits := GroupInfo.groupsInWhichDnIsMember(dn
 					, new GroupInfo.GroupData())
 		} else {
