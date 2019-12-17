@@ -150,10 +150,7 @@ class GroupInfo {
 			if (GroupInfo.options.regex) {
 				GroupInfo.options.filter := "(.*)"
 			}
-			GroupInfo.cn := parsedArguments[1]
-			if (parsedArguments.maxIndex() = 2) {
-				GroupInfo.options.filter := parsedArguments[2]
-			}
+			GroupInfo.handleParsedArguments(parsedArguments)
 			if (!GroupInfo.options.countOnly
 					&& !GroupInfo.options.resultOnly) {
 				Ansi.write("`nConnecting to " GroupInfo.options.host
@@ -213,6 +210,13 @@ class GroupInfo {
 	handleIBMnestedGroups() {
 		if (GroupInfo.options.ibmNestedGroups) {
 			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
+		}
+	}
+
+	handleParsedArguments(parsedArguments) {
+		GroupInfo.cn := parsedArguments[1]
+		if (parsedArguments.count() == 2) {
+			GroupInfo.options.filter := parsedArguments[2]
 		}
 	}
 
