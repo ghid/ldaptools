@@ -314,55 +314,7 @@ class GroupInfo {
 	}
 
 	formatOutput(entry) {
-		; ref := GroupInfo.formatRef(entry.ref)
-		; text := GroupInfo.formatText(entry.dn)
-		; if (GroupInfo.options.color) {
-			; text := RegExReplace(text, "(?P<attr>\w+=)"
-					; , Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-					; . "${attr}"
-					; . Ansi.setGraphic(Ansi.ATTR_OFF))
-			; if (GroupInfo.options.refs && ref != "") {
-				; ref := Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
-						; . "  <-(" RegExReplace(ref, "(?P<attr>\w+=)"
-						; , Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-						; . "${attr}"
-						; . Ansi.setGraphic(Ansi.ATTR_OFF))
-						; . Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
-						; . ")" Ansi.setGraphic(Ansi.ATTR_OFF)
-			; }
-		; }
-		; else {
-			; if (GroupInfo.options.refs) {
-				; ref := "  <-(" ref ")"
-			; }
-		; }
 		return entry.toString()
-	}
-
-	formatRef(ref) {
-		if (GroupInfo.options.refs) {
-			if (GroupInfo.options.short) {
-				ref := GroupInfo.compactEntry(ref)
-			}
-			return Format("{:" (GroupInfo.options.upper ? "U"
-					: GroupInfo.options.lower ? "L"
-					: "s") "}", ref)
-		}
-		return ""
-	}
-
-	formatText(text) {
-		if (GroupInfo.options.short) {
-			text := GroupInfo.compactEntry(text)
-		}
-		return Format("{:" (GroupInfo.options.upper ? "U"
-				: GroupInfo.options.lower ? "L"
-				: "s") "}", text)
-	}
-
-	compactEntry(entry) {
-		RegExMatch(entry, "^.*?=(.*?)\s*,.*$", $)
-		return $1
 	}
 
 	processOutput(text) {
