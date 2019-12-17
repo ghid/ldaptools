@@ -23,7 +23,7 @@ class GroupInfo {
 
 	setDefaults() {
 		return { append: ""
-				, base_dn: ""
+				, baseDn: ""
 				, color: false
 				, count: false
 				, count_only: false
@@ -78,8 +78,8 @@ class GroupInfo {
 				. GroupInfo.options.port ")"
 				,, GroupInfo.options.port, GroupInfo.options.port))
 		op.add(new OptParser.String("b", "base-dn", GroupInfo.options
-				, "base_dn", "basedn", "Base DN to start the search"
-				,, GroupInfo.options.base_dn, GroupInfo.options.base_dn))
+				, "baseDn", "basedn", "Base DN to start the search"
+				,, GroupInfo.options.baseDn, GroupInfo.options.baseDn))
 		op.add(new OptParser.Callback("g", "group", GroupInfo.options
 				, "group", "captureRegExGroupCallback", "number"
 				, "Return the group of regex evaluation as result (implies -e)"
@@ -367,7 +367,7 @@ class GroupInfo {
 
 	groupsInWhichDnIsMember(memberDn, groupData) {
 		if (!GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.base_dn
+				, GroupInfo.options.baseDn
 				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
 				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
 			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
@@ -411,7 +411,7 @@ class GroupInfo {
 
 	findDnByFilter(ldapFilter) {
 		if (GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.base_dn
+				, GroupInfo.options.baseDn
 				, ldapFilter) != Ldap.LDAP_SUCCESS) {
 			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
@@ -437,7 +437,7 @@ class GroupInfo {
 		numberOfGroups := 0
 		groupsOfCn := []
 		if (!GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.base_dn, "(cn=" cn ")"
+				, GroupInfo.options.baseDn, "(cn=" cn ")"
 				,, ["ibm-allgroups"]) == Ldap.LDAP_SUCCESS) {
 			throw Exception("error" Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
