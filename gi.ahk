@@ -326,11 +326,9 @@ class GroupInfo {
 					.getLastError())
 		}
 		loop %numberOfEntriesFound% {
-			if (A_Index == 1) {
-				memberEntry := GroupInfo.ldapConnection.firstEntry(searchResult)
-			} else {
-				memberEntry := GroupInfo.ldapConnection.nextEntry(memberEntry)
-			}
+			memberEntry := (A_Index == 1
+					? GroupInfo.ldapConnection.firstEntry(searchResult)
+					: GroupInfo.ldapConnection.nextEntry(memberEntry))
 			ibmAllGroupsAttribute
 					:= GroupInfo.ldapConnection.firstAttribute(memberEntry)
 			attributeValues := GroupInfo.ldapConnection.getValues(memberEntry
