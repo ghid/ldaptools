@@ -34,7 +34,7 @@ class GroupInfo {
 				, host: "localhost"
 				, ibmAllGroups: false
 				, ibmNestedGroups: false
-				, ignore_case: -1
+				, ignoreCase: -1
 				, lower: false
 				, max_nested_lv: 32
 				, output: ""
@@ -85,9 +85,9 @@ class GroupInfo {
 				, "Return the group of regex evaluation as result (implies -e)"
 				, OptParser.OPT_ARG))
 		op.add(new OptParser.Boolean("i", "ignore-case", GroupInfo.options
-				, "ignore_case", "Ignore case when filtering results"
-				, OptParser.OPT_NEG,, GroupInfo.options.ignore_case
-				, GroupInfo.options.ignore_case))
+				, "ignoreCase", "Ignore case when filtering results"
+				, OptParser.OPT_NEG,, GroupInfo.options.ignoreCase
+				, GroupInfo.options.ignoreCase))
 		op.add(new OptParser.Boolean("l", "lower", GroupInfo.options
 				, "lower", "Display result in lower case characters"))
 		op.add(new OptParser.Boolean("u", "upper", GroupInfo.options
@@ -336,7 +336,7 @@ class GroupInfo {
 			if (!GroupInfo.options.quiet
 					&& isOutputPrinted := Ansi.plainStr(text)
 					.filter(GroupInfo.options.filter, GroupInfo.options.regex
-					, (GroupInfo.options.ignore_case == true ? true : false)
+					, (GroupInfo.options.ignoreCase == true ? true : false)
 					, false
 					, match := "")) {
 				if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
