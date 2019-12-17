@@ -267,19 +267,9 @@ class GroupInfo {
 				, new GroupInfo.GroupData))
 
 		; Handle sort and/or output options; ---------------------------------
-		if (GroupInfo.options.tempFile) {
-			GroupInfo.options.tempFile.close()
-		}
 		content := ""
 		if (GroupInfo.options.tempFile) {
-			h_gi := FileOpen(A_Temp "\__gi__.dat", "r`n")
-			content := h_gi.read(h_gi.length)
-			h_gi.close()
-			; FileRead content, %A_Temp%\__gi__.dat
-			if (GroupInfo.options.sort) {
-				Sort content
-			}
-			FileDelete %A_Temp%\__gi__.dat
+			content := GroupInfo.readContentFromTempFileAndDeleteIt()
 		}
 		if (GroupInfo.options.append) {
 			file_name := GroupInfo.options.append
@@ -311,43 +301,6 @@ class GroupInfo {
 		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
 			Ansi.writeLine("Ok.")
 		}
-	}
-
-	processOutput(entry) {
-		text := entry.toString()
-		isOutputPrinted := true
-		try {
-			if (!GroupInfo.options.quiet
-					&& isOutputPrinted := Ansi.plainStr(text)
-					.filter(GroupInfo.options.filter, GroupInfo.options.regex
-					, (GroupInfo.options.ignoreCase == true ? true : false)
-					, false
-					, match := "")) {
-				if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
-					text := ""
-					loop % match.count {
-						text .= match[GroupInfo.capturedRegExGroups[A_Index]]
-					}
-				}
-				if (GroupInfo.options.tempFile) {
-					GroupInfo.options.tempFile.writeLine(((
-							!GroupInfo.options.output
-							&& !GroupInfo.options.append
-							&& !GroupInfo.options.resultOnly)
-							? "   " : "") text)
-				}
-				else if (!GroupInfo.options.countOnly) {
-					Ansi.writeLine((!GroupInfo.options.resultOnly
-							? "   "
-							: "") text, true)
-				}
-			}
-		}
-		catch gotException {
-			isOutputPrinted := false
-			throw gotException
-		}
-		return isOutputPrinted
 	}
 
 	groupsInWhichDnIsMember(memberDn, groupData) {
@@ -454,6 +407,55 @@ class GroupInfo {
 			}
 		}
 		return numberOfGroups
+	}
+
+	processOutput(entry) {
+		text := entry.toString()
+		isOutputPrinted := true
+		try {
+			if (!GroupInfo.options.quiet
+					&& isOutputPrinted := Ansi.plainStr(text)
+					.filter(GroupInfo.options.filter, GroupInfo.options.regex
+					, (GroupInfo.options.ignoreCase == true ? true : false)
+					, false
+					, match := "")) {
+				if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
+					text := ""
+					loop % match.count {
+						text .= match[GroupInfo.capturedRegExGroups[A_Index]]
+					}
+				}
+				if (GroupInfo.options.tempFile) {
+					GroupInfo.options.tempFile.writeLine(((
+							!GroupInfo.options.output
+							&& !GroupInfo.options.append
+							&& !GroupInfo.options.resultOnly)
+							? "   " : "") text)
+				}
+				else if (!GroupInfo.options.countOnly) {
+					Ansi.writeLine((!GroupInfo.options.resultOnly
+							? "   "
+							: "") text, true)
+				}
+			}
+		}
+		catch gotException {
+			isOutputPrinted := false
+			throw gotException
+		}
+		return isOutputPrinted
+	}
+
+	readContentFromTempFileAndDeleteIt() {
+		GroupInfo.options.tempFile.close()
+		tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
+		content := tempFile.read(tempFile.length)
+		tempFile.close()
+		if (GroupInfo.options.sort) {
+			Sort content
+		}
+		FileDelete %A_Temp%\__gi__.dat
+		return content
 	}
 
 	class GroupData {
