@@ -36,7 +36,7 @@ class GroupInfo {
 				, ibmNestedGroups: false
 				, ignoreCase: -1
 				, lower: false
-				, max_nested_lv: 32
+				, maxNestedLevel: 32
 				, output: ""
 				, port: 389
 				, quiet: false
@@ -110,11 +110,11 @@ class GroupInfo {
 		op.add(new OptParser.Boolean(0, "ibm-all-groups", GroupInfo.options
 				, "ibmAllGroups", "Use 'ibm_allgroups' to retrieve data"))
 		op.add(new OptParser.String(0, "max-nested-level", GroupInfo.options
-				, "max_nested_lv", "n"
+				, "maxNestedLevel", "n"
 				, "Defines, which recursion depth terminates the process "
 				. "(default=32)"
-				,, GroupInfo.options.max_nested_lv
-				, GroupInfo.options.max_nested_lv))
+				,, GroupInfo.options.maxNestedLevel
+				, GroupInfo.options.maxNestedLevel))
 		op.add(new OptParser.Boolean(0, "env"
 				, GroupInfo.options, "useEnvironmentVariables"
 				, "Ignore environment variable GI_OPTIONS"
@@ -399,7 +399,7 @@ class GroupInfo {
 					groupData.groupsOfDn[dn] := 1
 				}
 				groupData.nestedLevel++
-				if (groupData.nestedLevel > GroupInfo.options.max_nested_lv) {
+				if (groupData.nestedLevel > GroupInfo.options.maxNestedLevel) {
 					throw Exception("error: Cyclic reference detected: `n`t"
 							. dn "`n`t<- " memberDn,, RC_CYCLE_DETECTED)
 				}
