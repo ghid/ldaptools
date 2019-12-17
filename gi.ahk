@@ -346,22 +346,11 @@ class GroupInfo {
 	}
 
 	groupsInWhichDnIsMember(memberDn, groupData) {
-		if (!GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.baseDn
-				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
-				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
-			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
-					.getLastError()))
-		}
-		numberOfEntriesFound
-				:= GroupInfo.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw "error: " Exception(Ldap.err2String(GroupInfo
-					.ldapConnection.getLastError()))
-		}
+		numberOfEntriesFound := GroupInfo
+				.searchGroupsInWhichDnIsMember(memberDn, groupData)
 		loop %numberOfEntriesFound% {
 			member := (A_Index == 1
-					? GroupInfo.ldapConnection.firstEntry(searchResult)
+					? GroupInfo.ldapConnection.firstEntry(groupData.searchResult) ; ahklint-ignore: W002
 					: GroupInfo.ldapConnection.nextEntry(member))
 			if (member) {
 				if (!(dn := GroupInfo.ldapConnection.getDn(member))) {
@@ -385,6 +374,24 @@ class GroupInfo {
 			}
 		}
 		return groupData.numberOfGroups
+	}
+
+	searchGroupsInWhichDnIsMember(memberDn, groupData) {
+		if (!GroupInfo.ldapConnection.search(searchResult
+				, GroupInfo.options.baseDn
+				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
+				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
+			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
+					.getLastError()))
+		}
+		numberOfEntriesFound
+				:= GroupInfo.ldapConnection.countEntries(searchResult)
+		if (numberOfEntriesFound < 0) {
+			throw "error: " Exception(Ldap.err2String(GroupInfo
+					.ldapConnection.getLastError()))
+		}
+		groupData.searchResult := searchResult
+		return numberOfEntriesFound
 	}
 
 	processOutput(entry) {
@@ -476,6 +483,7 @@ class GroupInfo {
 	}
 
 	class GroupData {
+		searchResult := 0
 		numberOfGroups := 0
 		nestedLevel := 0
 		groupsOfDn := []
