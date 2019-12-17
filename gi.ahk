@@ -314,15 +314,7 @@ class GroupInfo {
 	}
 
 	formatOutput(text, ref) {
-		if (GroupInfo.options.refs) {
-			if (GroupInfo.options.short) {
-				if (RegExMatch(ref, "^.*?=(.*?),.*$", $)) {
-					ref := $1
-				}
-			}
-		} else {
-			ref := ""
-		}
+		ref := GroupInfo.formatRef(ref)
 		if (GroupInfo.options.short) {
 			if (RegExMatch(text, "^.*?=(.*?),.*$", $)) {
 				text := $1
@@ -356,6 +348,21 @@ class GroupInfo {
 			}
 		}
 		return text ref
+	}
+
+	formatRef(ref) {
+		if (GroupInfo.options.refs) {
+			if (GroupInfo.options.short) {
+				return GroupInfo.compactEntry(ref)
+			}
+			return ref
+		}
+		return ""
+	}
+
+	compactEntry(entry) {
+		RegExMatch(entry, "^.*?=(.*?)\s*,.*$", $)
+		return $1
 	}
 
 	processOutput(text) {
