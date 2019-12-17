@@ -6,6 +6,9 @@ class GroupInfo {
 		return [Ansi, Ldap, OptParser, String, System]
 	}
 
+	#Include %A_LineFile%\..\modules
+	#Include entry.ahk
+
 	static RC_OK := -1
 	static RC_MISSING_ARG := -2
 	static RC_INVALID_ARGS := -3
@@ -143,10 +146,9 @@ class GroupInfo {
 				GroupInfo.handleRegExFilter()
 				GroupInfo.handleParsedArguments(parsedArguments)
 				GroupInfo.handleCountOnly()
-				returnCode := GroupInfo.main()
+				returnCode := GroupInfo.handleHitCount(GroupInfo.main())
 			}
-		}
-		catch gotException {
+		} catch gotException {
 			OutputDebug % gotException.what
 					. "`nin: " gotException.file " #" gotException.line
 			Ansi.writeLine(gotException.message)
@@ -240,6 +242,13 @@ class GroupInfo {
 		}
 	}
 
+	handleHitCount(numberOfHits) {
+		if (GroupInfo.options.count) {
+			Ansi.writeLine("`n" numberOfHits " Hit(s)")
+		}
+		return numberOfHits
+	}
+
 	doCleanup() {
 		if (GroupInfo.ldapConnection) {
 			GroupInfo.ldapConnection.unbind()
@@ -274,9 +283,6 @@ class GroupInfo {
 			Ansi.write(content)
 		} else {
 			FileAppend %content%, %file_name%
-		}
-		if (GroupInfo.options.count) {
-			Ansi.writeLine("`n" numberOfHits " Hit(s)")
 		}
 		return numberOfHits
 	}
@@ -317,7 +323,8 @@ class GroupInfo {
 							.getLastError()))
 				}
 				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
-					if (GroupInfo.processOutput(new GroupInfo.Entry(dn, memberDn))) {
+					if (GroupInfo.processOutput(new GroupInfo.Entry(dn
+							, memberDn))) {
 						groupData.numberOfGroups++
 					}
 					groupData.groupsOfDn[dn] := 1
@@ -465,75 +472,6 @@ class GroupInfo {
 		numberOfGroups := 0
 		nestedLevel := 0
 		groupsOfDn := []
-	}
-
-	class Entry {
-		theDn := ""
-		theRef := ""
-
-		__new(theDn, theRef) {
-			this.theDn := theDn
-			this.theRef := theRef
-			return this
-		}
-
-		dn[] {
-			get {
-				return this.handleColor(this.handleCase(this
-						.handleShort(this.theDn)))
-			}
-		}
-
-		ref[] {
-			get {
-				if (GroupInfo.options.refs) {
-					return this.addSeparator(this.handleColor(this
-							.handleCase(this.handleShort(this.theRef))))
-				}
-				return ""
-			}
-		}
-
-		addSeparator(text) {
-			if (GroupInfo.options.color) {
-				beginSeparator := Ansi.setGraphic(Ansi.FOREGROUND_RED
-						, Ansi.ATTR_BOLD)
-				endSeparator := Ansi.setGraphic(Ansi.ATTR_OFF)
-			} else {
-				beginSeparator := ""
-				endSeparator := ""
-			}
-			return Format("{:s}  <-({:s}{:s}){:s}"
-					, beginSeparator, text, beginSeparator, endSeparator)
-		}
-
-		handleShort(text) {
-			if (GroupInfo.options.short) {
-				RegExMatch(text, "^.*?=(.*?)\s*,.*$", $)
-				return $1
-			}
-			return text
-		}
-
-		handleCase(text) {
-			return Format("{:" (GroupInfo.options.upper ? "U"
-					: GroupInfo.options.lower ? "L"
-					: "s") "}", text)
-		}
-
-		handleColor(text) {
-			if (GroupInfo.options.color) {
-				return RegExReplace(text, "(?P<attr>\w+=)"
-						, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-						. "${attr}"
-						. Ansi.setGraphic(Ansi.ATTR_OFF))
-			}
-			return text
-		}
-
-		toString() {
-			return this.dn this.ref
-		}
 	}
 }
 
