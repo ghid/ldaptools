@@ -26,7 +26,7 @@ class GroupInfo {
 				, baseDn: ""
 				, color: false
 				, count: false
-				, count_only: false
+				, countOnly: false
 				, env_dummy: false
 				, filter: "*"
 				, group: ""
@@ -63,7 +63,7 @@ class GroupInfo {
 		op.add(new OptParser.Boolean("c", "count", GroupInfo.options
 				, "count", "Display number of hits"))
 		op.add(new OptParser.Boolean("C", "count-only", GroupInfo.options
-				, "count_only"
+				, "countOnly"
 				, "Return the number of hits as exit code; no other output"))
 		op.add(new OptParser.Boolean("e", "regex", GroupInfo.options
 				, "regex", "Use a regular expression to filter the result set "
@@ -153,7 +153,7 @@ class GroupInfo {
 			if (parsedArguments.maxIndex() = 2) {
 				GroupInfo.options.filter := parsedArguments[2]
 			}
-			if (!GroupInfo.options.count_only
+			if (!GroupInfo.options.countOnly
 					&& !GroupInfo.options.result_only) {
 				Ansi.write("`nConnecting to " GroupInfo.options.host
 						. ":" GroupInfo.options.port " ... ")
@@ -232,11 +232,11 @@ class GroupInfo {
 				, GroupInfo.options.port)
 		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
 		GroupInfo.ldapConnection.connect()
-		if ( !GroupInfo.options.count_only && !GroupInfo.options.result_only) {
+		if ( !GroupInfo.options.countOnly && !GroupInfo.options.result_only) {
 			Ansi.writeLine("Ok.")
 		}
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
-		if (!GroupInfo.options.count_only && !GroupInfo.options.result_only) {
+		if (!GroupInfo.options.countOnly && !GroupInfo.options.result_only) {
 			Ansi.writeLine(GroupInfo.formatOutput(dn, ""), true)
 		}
 		if (!GroupInfo.options.ibm_all_groups) {
@@ -351,7 +351,7 @@ class GroupInfo {
 							&& !GroupInfo.options.result_only)
 							? "   " : "") text)
 				}
-				else if (!GroupInfo.options.count_only) {
+				else if (!GroupInfo.options.countOnly) {
 					Ansi.writeLine((!GroupInfo.options.result_only
 							? "   "
 							: "") text, true)
