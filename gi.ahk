@@ -145,9 +145,7 @@ class GroupInfo {
 				GroupInfo.evaluateCommandLineOptions(parsedArguments)
 			}
 			GroupInfo.handleRegExCaptureGroups()
-			if (GroupInfo.options.ibm_nested_group) {
-				GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
-			}
+			GroupInfo.handleIBMnestedGroups()
 			if (GroupInfo.options.regex) {
 				GroupInfo.options.filter := "(.*)"
 			}
@@ -208,6 +206,12 @@ class GroupInfo {
 			if (!GroupInfo.options.regex) {
 				GroupInfo.options.regex := true
 			}
+		}
+	}
+
+	handleIBMnestedGroups() {
+		if (GroupInfo.options.ibm_nested_group) {
+			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
 		}
 	}
 
