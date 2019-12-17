@@ -133,24 +133,17 @@ class GroupInfo {
 			returnCode := GroupInfo.RC_OK
 			optionParser := GroupInfo.cli()
 			parsedArguments := optionParser.parse(commandLineArguments)
-			if (GroupInfo.options.help) {
-				Ansi.writeLine(optionParser.usage())
-				return ""
-			}
-			else if (GroupInfo.options.version) {
-				Ansi.writeLine(G_VERSION_INFO.NAME "/"
-						. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
-				return ""
-			}
-			else {
+			if (GroupInfo.shallHelpOrVersionInfoBeDisplayed()) {
+				returnCode := GroupInfo.showHelpOrVersionInfo(optionParser)
+			} else {
 				GroupInfo.evaluateCommandLineOptions(parsedArguments)
+				GroupInfo.handleRegExCaptureGroups()
+				GroupInfo.handleIBMnestedGroups()
+				GroupInfo.handleRegExFilter()
+				GroupInfo.handleParsedArguments(parsedArguments)
+				GroupInfo.handleCountOnly()
+				returnCode := GroupInfo.main()
 			}
-			GroupInfo.handleRegExCaptureGroups()
-			GroupInfo.handleIBMnestedGroups()
-			GroupInfo.handleRegExFilter()
-			GroupInfo.handleParsedArguments(parsedArguments)
-			GroupInfo.handleCountOnly()
-			returnCode := GroupInfo.main()
 		}
 		catch gotException {
 			OutputDebug % gotException.what " " gotException.file " " gotException.line
@@ -161,6 +154,20 @@ class GroupInfo {
 			GroupInfo.doCleanup()
 		}
 		return returnCode
+	}
+
+	shallHelpOrVersionInfoBeDisplayed() {
+		return GroupInfo.options.help || GroupInfo.options.version
+	}
+
+	showHelpOrVersionInfo(optionParser) {
+		if (GroupInfo.options.help) {
+			Ansi.writeLine(optionParser.usage())
+		} else if (GroupInfo.options.version) {
+			Ansi.writeLine(G_VERSION_INFO.NAME "/"
+					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
+		}
+		return ""
 	}
 
 	evaluateCommandLineOptions(parsedArguments) {
