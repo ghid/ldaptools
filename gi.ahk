@@ -147,9 +147,7 @@ class GroupInfo {
 			}
 			GroupInfo.handleRegExCaptureGroups()
 			GroupInfo.handleIBMnestedGroups()
-			if (GroupInfo.options.regex) {
-				GroupInfo.options.filter := "(.*)"
-			}
+			GroupInfo.handleRegExFilter()
 			GroupInfo.handleParsedArguments(parsedArguments)
 			if (!GroupInfo.options.countOnly
 					&& !GroupInfo.options.resultOnly) {
@@ -175,6 +173,7 @@ class GroupInfo {
 	}
 
 	evaluateCommandLineOptions(parsedArguments) {
+		; @todo: Throw exception for more than two arguments
 		if (parsedArguments.maxIndex() < 1) {
 			throw Exception("error: Missing argument"
 					,, GroupInfo.RC_MISSING_ARG)
@@ -217,6 +216,12 @@ class GroupInfo {
 		GroupInfo.cn := parsedArguments[1]
 		if (parsedArguments.count() == 2) {
 			GroupInfo.options.filter := parsedArguments[2]
+		}
+	}
+
+	handleRegExFilter() {
+		if (GroupInfo.options.regex) {
+			GroupInfo.options.filter := "(.*)"
 		}
 	}
 
