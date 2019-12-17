@@ -313,11 +313,8 @@ class GroupInfo {
 		}
 	}
 
-	formatOutput(entry) {
-		return entry.toString()
-	}
-
-	processOutput(text) {
+	processOutput(entry) {
+		text := entry.toString()
 		isOutputPrinted := true
 		try {
 			if (!GroupInfo.options.quiet
@@ -379,8 +376,7 @@ class GroupInfo {
 							.getLastError()))
 				}
 				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
-					if (GroupInfo.processOutput(GroupInfo
-							.formatOutput(new GroupInfo.Entry(dn, memberDn)))) {
+					if (GroupInfo.processOutput(new GroupInfo.Entry(dn, memberDn))) {
 						groupData.numberOfGroups++
 					}
 					groupData.groupsOfDn[dn] := 1
@@ -453,8 +449,8 @@ class GroupInfo {
 			groupsOfCn := System.ptrListToStrArray(attributeValues)
 			numberOfGroups := groupsOfCn.maxIndex()
 			loop %numberOfGroups% {
-				GroupInfo.processOutput(GroupInfo.formatOutput(new GroupInfo
-						.Entry(groupsOfCn[A_Index], "")))
+				GroupInfo.processOutput(new GroupInfo.Entry(groupsOfCn[A_Index]
+						, ""))
 			}
 		}
 		return numberOfGroups
