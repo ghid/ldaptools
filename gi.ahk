@@ -282,50 +282,6 @@ class GroupInfo {
 		}
 	}
 
-	groupsInWhichDnIsMember(memberDn, groupData) {
-		if (!GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.baseDn
-				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
-				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
-			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
-					.getLastError()))
-		}
-		numberOfEntriesFound
-				:= GroupInfo.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw "error: " Exception(Ldap.err2String(GroupInfo
-					.ldapConnection.getLastError()))
-		}
-		loop %numberOfEntriesFound% {
-			if (A_Index = 1) {
-				member := GroupInfo.ldapConnection.firstEntry(searchResult)
-			} else {
-				member := GroupInfo.ldapConnection.nextEntry(member)
-			}
-			if (member) {
-				if (!(dn := GroupInfo.ldapConnection.getDn(member))) {
-					throw Exception(Ldap.err2String(GroupInfo.ldapConnection
-							.getLastError()))
-				}
-				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
-					if (GroupInfo.processOutput(new GroupInfo.Entry(dn
-							, memberDn))) {
-						groupData.numberOfGroups++
-					}
-					groupData.groupsOfDn[dn] := 1
-				}
-				groupData.nestedLevel++
-				if (groupData.nestedLevel > GroupInfo.options.maxNestedLevel) {
-					throw Exception("error: Cyclic reference detected: `n`t"
-							. dn "`n`t<- " memberDn,, RC_CYCLE_DETECTED)
-				}
-				GroupInfo.groupsInWhichDnIsMember(dn, groupData)
-				groupData.nestedLevel--
-			}
-		}
-		return groupData.numberOfGroups
-	}
-
 	findDnByFilter(ldapFilter) {
 		if (GroupInfo.ldapConnection.search(searchResult
 				, GroupInfo.options.baseDn
@@ -387,6 +343,50 @@ class GroupInfo {
 			}
 		}
 		return numberOfGroups
+	}
+
+	groupsInWhichDnIsMember(memberDn, groupData) {
+		if (!GroupInfo.ldapConnection.search(searchResult
+				, GroupInfo.options.baseDn
+				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
+				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
+			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
+					.getLastError()))
+		}
+		numberOfEntriesFound
+				:= GroupInfo.ldapConnection.countEntries(searchResult)
+		if (numberOfEntriesFound < 0) {
+			throw "error: " Exception(Ldap.err2String(GroupInfo
+					.ldapConnection.getLastError()))
+		}
+		loop %numberOfEntriesFound% {
+			if (A_Index = 1) {
+				member := GroupInfo.ldapConnection.firstEntry(searchResult)
+			} else {
+				member := GroupInfo.ldapConnection.nextEntry(member)
+			}
+			if (member) {
+				if (!(dn := GroupInfo.ldapConnection.getDn(member))) {
+					throw Exception(Ldap.err2String(GroupInfo.ldapConnection
+							.getLastError()))
+				}
+				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
+					if (GroupInfo.processOutput(new GroupInfo.Entry(dn
+							, memberDn))) {
+						groupData.numberOfGroups++
+					}
+					groupData.groupsOfDn[dn] := 1
+				}
+				groupData.nestedLevel++
+				if (groupData.nestedLevel > GroupInfo.options.maxNestedLevel) {
+					throw Exception("error: Cyclic reference detected: `n`t"
+							. dn "`n`t<- " memberDn,, RC_CYCLE_DETECTED)
+				}
+				GroupInfo.groupsInWhichDnIsMember(dn, groupData)
+				groupData.nestedLevel--
+			}
+		}
+		return groupData.numberOfGroups
 	}
 
 	processOutput(entry) {
