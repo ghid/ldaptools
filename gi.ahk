@@ -313,30 +313,30 @@ class GroupInfo {
 		}
 	}
 
-	formatOutput(text, ref) {
-		ref := GroupInfo.formatRef(ref)
-		text := GroupInfo.formatText(text)
-		if (GroupInfo.options.color) {
-			text := RegExReplace(text, "(?P<attr>\w+=)"
-					, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-					. "${attr}"
-					. Ansi.setGraphic(Ansi.ATTR_OFF))
-			if (GroupInfo.options.refs && ref != "") {
-				ref := Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
-						. "  <-(" RegExReplace(ref, "(?P<attr>\w+=)"
-						, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-						. "${attr}"
-						. Ansi.setGraphic(Ansi.ATTR_OFF))
-						. Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
-						. ")" Ansi.setGraphic(Ansi.ATTR_OFF)
-			}
-		}
-		else {
-			if (GroupInfo.options.refs) {
-				ref := "  <-(" ref ")"
-			}
-		}
-		return text ref
+	formatOutput(entry) {
+		; ref := GroupInfo.formatRef(entry.ref)
+		; text := GroupInfo.formatText(entry.dn)
+		; if (GroupInfo.options.color) {
+			; text := RegExReplace(text, "(?P<attr>\w+=)"
+					; , Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
+					; . "${attr}"
+					; . Ansi.setGraphic(Ansi.ATTR_OFF))
+			; if (GroupInfo.options.refs && ref != "") {
+				; ref := Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
+						; . "  <-(" RegExReplace(ref, "(?P<attr>\w+=)"
+						; , Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
+						; . "${attr}"
+						; . Ansi.setGraphic(Ansi.ATTR_OFF))
+						; . Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
+						; . ")" Ansi.setGraphic(Ansi.ATTR_OFF)
+			; }
+		; }
+		; else {
+			; if (GroupInfo.options.refs) {
+				; ref := "  <-(" ref ")"
+			; }
+		; }
+		return entry.toString()
 	}
 
 	formatRef(ref) {
@@ -427,8 +427,8 @@ class GroupInfo {
 							.getLastError()))
 				}
 				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
-					if (GroupInfo.processOutput(GroupInfo.formatOutput(dn
-							, memberDn))) {
+					if (GroupInfo.processOutput(GroupInfo
+							.formatOutput(new GroupInfo.Entry(dn, memberDn)))) {
 						groupData.numberOfGroups++
 					}
 					groupData.groupsOfDn[dn] := 1
@@ -468,7 +468,7 @@ class GroupInfo {
 		entry := GroupInfo.ldapConnection.firstEntry(searchResult)
 		dn := GroupInfo.ldapConnection.getDn(entry)
 		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine(GroupInfo.formatOutput(dn, ""))
+			Ansi.writeLine(new GroupInfo.Entry(dn, "").dn)
 		}
 		return dn
 	}
@@ -501,8 +501,8 @@ class GroupInfo {
 			groupsOfCn := System.ptrListToStrArray(attributeValues)
 			numberOfGroups := groupsOfCn.maxIndex()
 			loop %numberOfGroups% {
-				GroupInfo.processOutput(GroupInfo
-						.formatOutput(groupsOfCn[A_Index], ""))
+				GroupInfo.processOutput(GroupInfo.formatOutput(new GroupInfo
+						.Entry(groupsOfCn[A_Index], "")))
 			}
 		}
 		return numberOfGroups
@@ -512,6 +512,75 @@ class GroupInfo {
 		numberOfGroups := 0
 		nestedLevel := 0
 		groupsOfDn := []
+	}
+
+	class Entry {
+		theDn := ""
+		theRef := ""
+
+		__new(theDn, theRef) {
+			this.theDn := theDn
+			this.theRef := theRef
+			return this
+		}
+
+		dn[] {
+			get {
+				return this.handleColor(this.handleCase(this
+						.handleShort(this.theDn)))
+			}
+		}
+
+		ref[] {
+			get {
+				if (GroupInfo.options.refs) {
+					return this.addSeparator(this.handleColor(this
+							.handleCase(this.handleShort(this.theRef))))
+				}
+				return ""
+			}
+		}
+
+		addSeparator(text) {
+			if (GroupInfo.options.color) {
+				beginSeparator := Ansi.setGraphic(Ansi.FOREGROUND_RED
+						, Ansi.ATTR_BOLD)
+				endSeparator := Ansi.setGraphic(Ansi.ATTR_OFF)
+			} else {
+				beginSeparator := ""
+				endSeparator := ""
+			}
+			return Format("{:s}  <-({:s}{:s}){:s}"
+					, beginSeparator, text, beginSeparator, endSeparator)
+		}
+
+		handleShort(text) {
+			if (GroupInfo.options.short) {
+				RegExMatch(text, "^.*?=(.*?)\s*,.*$", $)
+				return $1
+			}
+			return text
+		}
+
+		handleCase(text) {
+			return Format("{:" (GroupInfo.options.upper ? "U"
+					: GroupInfo.options.lower ? "L"
+					: "s") "}", text)
+		}
+
+		handleColor(text) {
+			if (GroupInfo.options.color) {
+				return RegExReplace(text, "(?P<attr>\w+=)"
+						, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
+						. "${attr}"
+						. Ansi.setGraphic(Ansi.ATTR_OFF))
+			}
+			return text
+		}
+
+		toString() {
+			return this.dn this.ref
+		}
 	}
 }
 
