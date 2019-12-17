@@ -144,12 +144,7 @@ class GroupInfo {
 			else {
 				GroupInfo.evaluateCommandLineOptions(parsedArguments)
 			}
-			if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
-				GroupInfo.options.group := true
-				if (!GroupInfo.options.regex) {
-					GroupInfo.options.regex := true
-				}
-			}
+			GroupInfo.handleRegExCaptureGroups()
 			if (GroupInfo.options.ibm_nested_group) {
 				GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
 			}
@@ -204,6 +199,15 @@ class GroupInfo {
 			throw Exception("error: Options '--ibm-nested-group' and "
 					. " '--ibm-all-groups' cannot be used together"
 					,, GroupInfo.RC_INVALID_ARGS)
+		}
+	}
+
+	handleRegExCaptureGroups() {
+		if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
+			GroupInfo.options.group := true
+			if (!GroupInfo.options.regex) {
+				GroupInfo.options.regex := true
+			}
 		}
 	}
 
