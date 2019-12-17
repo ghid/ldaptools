@@ -319,12 +319,7 @@ class GroupInfo {
 			throw Exception("error" Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
 		}
-		numberOfEntriesFound
-				:= GroupInfo.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw "error: " Ldap.err2String(GroupInfo.ldapConnection
-					.getLastError())
-		}
+		numberOfEntriesFound := GroupInfo.checkNumberOfEntries(searchResult)
 		loop %numberOfEntriesFound% {
 			memberEntry := (A_Index == 1
 					? GroupInfo.ldapConnection.firstEntry(searchResult)
@@ -382,16 +377,21 @@ class GroupInfo {
 			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
 		}
+		groupData.searchResult := searchResult
+		return GroupInfo.checkNumberOfEntries(searchResult)
+	}
+
+	checkNumberOfEntries(searchResult) {
 		numberOfEntriesFound
 				:= GroupInfo.ldapConnection.countEntries(searchResult)
 		if (numberOfEntriesFound < 0) {
 			throw "error: " Exception(Ldap.err2String(GroupInfo
 					.ldapConnection.getLastError()))
 		}
-		groupData.searchResult := searchResult
 		return numberOfEntriesFound
 	}
 
+	; @todo: Refactor!
 	processOutput(entry) {
 		text := entry.toString()
 		isOutputPrinted := true
