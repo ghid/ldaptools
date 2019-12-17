@@ -42,7 +42,7 @@ class GroupInfo {
 				, quiet: false
 				, refs: false
 				, regex: false
-				, result_only: false
+				, resultOnly: false
 				, short: false
 				, sort: false
 				, tempFile: 0
@@ -101,7 +101,7 @@ class GroupInfo {
 				. "(deactivated by default if -a or -o option is set)"
 				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
 		op.add(new OptParser.Boolean("R", "result-only", GroupInfo.options
-				, "result_only"
+				, "resultOnly"
 				, "Suppress any other output than the found groups"))
 		op.add(new OptParser.Boolean(0, "ibm-nested-group", GroupInfo.options
 				, "ibmNestedGroups"
@@ -155,7 +155,7 @@ class GroupInfo {
 				GroupInfo.options.filter := parsedArguments[2]
 			}
 			if (!GroupInfo.options.countOnly
-					&& !GroupInfo.options.result_only) {
+					&& !GroupInfo.options.resultOnly) {
 				Ansi.write("`nConnecting to " GroupInfo.options.host
 						. ":" GroupInfo.options.port " ... ")
 			}
@@ -233,11 +233,11 @@ class GroupInfo {
 				, GroupInfo.options.port)
 		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
 		GroupInfo.ldapConnection.connect()
-		if ( !GroupInfo.options.countOnly && !GroupInfo.options.result_only) {
+		if ( !GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
 			Ansi.writeLine("Ok.")
 		}
 		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
-		if (!GroupInfo.options.countOnly && !GroupInfo.options.result_only) {
+		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
 			Ansi.writeLine(GroupInfo.formatOutput(dn, ""), true)
 		}
 		if (!GroupInfo.options.ibmAllGroups) {
@@ -349,11 +349,11 @@ class GroupInfo {
 					GroupInfo.options.tempFile.writeLine(((
 							!GroupInfo.options.output
 							&& !GroupInfo.options.append
-							&& !GroupInfo.options.result_only)
+							&& !GroupInfo.options.resultOnly)
 							? "   " : "") text)
 				}
 				else if (!GroupInfo.options.countOnly) {
-					Ansi.writeLine((!GroupInfo.options.result_only
+					Ansi.writeLine((!GroupInfo.options.resultOnly
 							? "   "
 							: "") text, true)
 				}
