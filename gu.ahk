@@ -16,7 +16,6 @@ class GroupUser {
 
 	static options := GroupUser.setDefaults()
 
-	static out_h := 0
 	static out_file := ""
 	static cn := ""
 	static dn := ""
@@ -46,6 +45,7 @@ class GroupUser {
 				, result_only: false
 				, short: false
 				, sort: false
+				, tempFile: 0
 				, upper: false
 				, version: false }
 	}
@@ -59,68 +59,10 @@ class GroupUser {
 				rc := GroupUser.showHelpOrVersionInfo(op)
 			} else {
 				GroupUser.evaluateCommandLineOptions(args)
-				if (GroupUser.options.sort
-						|| GroupUser.options.output
-						|| GroupUser.options.append) {
-					GroupUser.out_h := FileOpen(A_Temp "\__gu__.dat", "w`n")
-					if ((GroupUser.options.output || GroupUser.options.append)
-							&& GroupUser.options.color != true) {
-						GroupUser.options.color := false
-							OutputDebug % A_ThisFunc ": GroupUser.options.color has been set "
-									. "to false because of file output"
-					}
-				}
 				GroupUser.handleIBMnestedGroups()
 				GroupUser.handleParsedArguments(args)
 				GroupUser.handleCountOnly()
-				GroupUser.ldapConnection := new Ldap(GroupUser.options.host
-						, GroupUser.options.port)
-				GroupUser.ldapConnection.connect()
-				GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-				if (!GroupUser.options.countOnly
-						&& !GroupUser.options.result_only) {
-					Ansi.writeLine("Ok.")
-					Ansi.writeLine(GroupUser.format_output(GroupUser
-							.ldap_get_dn("cn=" GroupUser.cn), ""))
-				}
-				rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
-						, new GroupUser.MemberData())
-				; Handle sort and/or output options
-				; ---------------------------------
-				if (GroupUser.out_h) {
-					GroupUser.out_h.close()
-				}
-				content := ""
-				if (GroupUser.out_h) {
-					h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
-					content := h_gu.read(h_gu.Length)
-					h_gu.close()
-					; FileRead content, %A_Temp%\__gu__.dat
-					if (GroupUser.options.sort) {
-						Sort content
-					}
-					FileDelete %A_Temp%\__gu__.dat
-				}
-				if (GroupUser.options.append) {
-					file_name := GroupUser.options.append
-				}
-				else if (GroupUser.options.output) {
-					if (FileExist(GroupUser.options.output)) {
-						FileDelete % GroupUser.options.output
-					}
-					file_name := GroupUser.options.output
-				} else {
-					file_name := "*"
-				}
-				if (file_name = "*") {
-					Ansi.write(content)
-				} else {
-					FileAppend %content%, %file_name%
-				}
-				content := ""
-				if (GroupUser.options.count) {
-					Ansi.writeLine("`n" rc " Hit(s)")
-				}
+				rc := GroupUser.handleHitCount(GroupUser.main())
 			}
 		} catch e {
 			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
@@ -131,6 +73,93 @@ class GroupUser {
 			GroupUser.doCleanup()
 		}
 		return rc
+	}
+
+	cli() {
+		op := new OptParser("gu [-a <filename> | -o <filename>] [options] "
+				. "<cn> [filter]",, "GU_OPTIONS")
+		op.add(new OptParser.String("a", "append"
+				, GroupUser.options, "append", "file-name"
+				, "Append result to existing file"))
+		op.add(new OptParser.String("o", ""
+				, GroupUser.options, "output", "file-name"
+				, "Write result to file"))
+		op.add(new OptParser.Group("`nOptions"))
+		op.add(new OptParser.Boolean("1", "short"
+				, GroupUser.options, "short"
+				, "Display common names instead of the DN"))
+		op.add(new OptParser.Boolean("c", "count"
+				, GroupUser.options, "count"
+				, "Display number of hits"))
+		op.add(new OptParser.Boolean("C", "count-only"
+				, GroupUser.options, "countOnly"
+				, "Return the number of hits as exit code; no other output"))
+		op.add(new OptParser.Boolean("e", "regex"
+				, GroupUser.options, "regex"
+				, "Use a regular expression to filter the result set "
+				. "(see also "
+				. "http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
+		op.add(new OptParser.String("h", "host"
+				, GroupUser.options, "host", "host-name"
+				, "Hostname of the LDAP-Server (default="
+				. GroupUser.options.host ")"
+				,, GroupUser.options.host, GroupUser.options.host))
+		op.add(new OptParser.String("p", "port"
+				, GroupUser.options, "port", "portnum"
+				, "Port number of the LDAP-Server (default="
+				. GroupUser.options.port ")"
+				,, GroupUser.options.port, GroupUser.options.port))
+		op.add(new OptParser.Boolean("i", "ignore-case"
+				, GroupUser.options, "ignore_case"
+				, "Ignore case when filtering results", OptParser.OPT_NEG
+				, GroupUser.options.ignore_case, GroupUser.options.ignore_case))
+		op.add(new OptParser.Boolean("l", "lower"
+				, GroupUser.options, "lower"
+				, "Display result in lower case characters"))
+		op.add(new OptParser.Boolean("u", "upper"
+				, GroupUser.options, "upper"
+				, "Display result in upper case characters"))
+		op.add(new OptParser.Boolean("r", "refs"
+				, GroupUser.options, "refs"
+				, "Display relations"))
+		op.add(new OptParser.Boolean("s", "sort"
+				, GroupUser.options, "sort"
+				, "Sort result"))
+		op.add(new OptParser.Boolean("v", "invert-match"
+				, GroupUser.options, "invert_match"
+				, "Show not matching results"))
+		op.add(new OptParser.Boolean(0, "color"
+				, GroupUser.options, "color"
+				, "Colored output "
+				. "(deactivated by default if -a or -o option is set)"
+				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
+		op.add(new OptParser.Boolean("R", "result-only"
+				, GroupUser.options, "result_only"
+				, "Suppress any other output than the found groups"))
+		op.add(new OptParser.Boolean(0, "ibm-nested-group"
+				, GroupUser.options, "ibmNestedGroups"
+				, "Only chase groups which implement "
+				. "objectclass ibm-nestedGroup"))
+		op.add(new OptParser.String(0, "max-nested-level"
+				, GroupUser.options, "max_nested_lv", "n"
+				, "Defines, which recursion depth terminates the process "
+				. "(default=32)"
+				,, GroupUser.options.max_nested_lv
+				, GroupUser.options.max_nested_lv))
+		op.add(new OptParser.Boolean(0, "env"
+				, GroupUser.options, "env_dummy"
+				, "Ignore environment variable GU_OPTIONS"
+				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+		op.add(new OptParser.Boolean("q", "quiet"
+				, GroupUser.options, "quiet"
+				, "Suppress output of results"))
+		op.add(new OptParser.Boolean(0, "version"
+				, GroupUser.options, "version"
+				, "Print version info"))
+		op.add(new OptParser.Boolean(0, "help"
+				, GroupUser.options, "help"
+				, "Print help", OptParser.OPT_HIDDEN))
+		return op
 	}
 
 	shallHelpOrVersionInfoBeDisplayed() {
@@ -189,12 +218,81 @@ class GroupUser {
 		}
 	}
 
+	handleHitCount(numberOfHits) {
+		if (GroupUser.options.count) {
+			Ansi.writeLine("`n" numberOfHits " Hit(s)")
+		}
+		return numberOfHits
+	}
+
 	doCleanup() {
 		if (GroupUser.ldapConnection) {
 			GroupUser.ldapConnection.unbind()
 		}
-		if (GroupUser.out_h) {
-			GroupUser.out_h.close()
+		if (GroupUser.options.tempFile) {
+			GroupUser.options.tempFile.close()
+		}
+	}
+
+	main() {
+		GroupUser.openTempFileIfNecessary()
+		GroupUser.ldapConnection := new Ldap(GroupUser.options.host
+				, GroupUser.options.port)
+		GroupUser.ldapConnection.connect()
+		GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
+		if (!GroupUser.options.countOnly
+				&& !GroupUser.options.result_only) {
+			Ansi.writeLine("Ok.")
+			Ansi.writeLine(GroupUser.format_output(GroupUser
+					.ldap_get_dn("cn=" GroupUser.cn), ""))
+		}
+		rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
+				, new GroupUser.MemberData())
+		; Handle sort and/or output options
+		; ---------------------------------
+		if (GroupUser.options.tempFile) {
+			GroupUser.options.tempFile.close()
+		}
+		content := ""
+		if (GroupUser.options.tempFile) {
+			h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
+			content := h_gu.read(h_gu.Length)
+			h_gu.close()
+			; FileRead content, %A_Temp%\__gu__.dat
+			if (GroupUser.options.sort) {
+				Sort content
+			}
+			FileDelete %A_Temp%\__gu__.dat
+		}
+		if (GroupUser.options.append) {
+			file_name := GroupUser.options.append
+		}
+		else if (GroupUser.options.output) {
+			if (FileExist(GroupUser.options.output)) {
+				FileDelete % GroupUser.options.output
+			}
+			file_name := GroupUser.options.output
+		} else {
+			file_name := "*"
+		}
+		if (file_name = "*") {
+			Ansi.write(content)
+		} else {
+			FileAppend %content%, %file_name%
+		}
+		content := ""
+		return rc
+	}
+
+	openTempFileIfNecessary() {
+		if (GroupUser.options.sort
+				|| GroupUser.options.output
+				|| GroupUser.options.append) {
+			if ((GroupUser.options.output || GroupUser.options.append)
+					&& GroupUser.options.color != true) {
+				GroupUser.options.color := false
+			}
+			GroupUser.options.tempFile := FileOpen(A_Temp "\__gu__.dat", "w`n")
 		}
 	}
 
@@ -272,8 +370,8 @@ class GroupUser {
 					, GroupUser.options.regex
 					, (GroupUser.options.ignore_case = true ? true : false)
 					, GroupUser.options.invert_match)) {
-				if (GroupUser.out_h) {
-					GroupUser.out_h.writeLine((!GroupUser.options.output
+				if (GroupUser.options.tempFile) {
+					GroupUser.options.tempFile.writeLine((!GroupUser.options.output
 							&& !GroupUser.options.append
 							&& !GroupUser.options.result_only ? "	" : "") text)
 				} else if (!GroupUser.options.countOnly) {
@@ -364,93 +462,6 @@ class GroupUser {
 		} else	{
 			return false
 		}
-	}
-
-	cli() {
-		op := new OptParser("gu [-a <filename> | -o <filename>] [options] "
-				. "<cn> [filter]",, "GU_OPTIONS")
-		op.add(new OptParser.String("a", "append"
-				, GroupUser.options, "append", "file-name"
-				, "Append result to existing file"))
-		op.add(new OptParser.String("o", ""
-				, GroupUser.options, "output", "file-name"
-				, "Write result to file"))
-		op.add(new OptParser.Group("`nOptions"))
-		op.add(new OptParser.Boolean("1", "short"
-				, GroupUser.options, "short"
-				, "Display common names instead of the DN"))
-		op.add(new OptParser.Boolean("c", "count"
-				, GroupUser.options, "count"
-				, "Display number of hits"))
-		op.add(new OptParser.Boolean("C", "count-only"
-				, GroupUser.options, "countOnly"
-				, "Return the number of hits as exit code; no other output"))
-		op.add(new OptParser.Boolean("e", "regex"
-				, GroupUser.options, "regex"
-				, "Use a regular expression to filter the result set "
-				. "(see also "
-				. "http://ahkscript.org/docs/misc/RegEx-QuickRef.htm)"))
-		op.add(new OptParser.String("h", "host"
-				, GroupUser.options, "host", "host-name"
-				, "Hostname of the LDAP-Server (default="
-				. GroupUser.options.host ")"
-				,, GroupUser.options.host, GroupUser.options.host))
-		op.add(new OptParser.String("p", "port"
-				, GroupUser.options, "port", "portnum"
-				, "Port number of the LDAP-Server (default="
-				. GroupUser.options.port ")"
-				,, GroupUser.options.port, GroupUser.options.port))
-		op.add(new OptParser.Boolean("i", "ignore-case"
-				, GroupUser.options, "ignore_case"
-				, "Ignore case when filtering results", OptParser.OPT_NEG
-				, GroupUser.options.ignore_case, GroupUser.options.ignore_case))
-		op.add(new OptParser.Boolean("l", "lower"
-				, GroupUser.options, "lower"
-				, "Display result in lower case characters"))
-		op.add(new OptParser.Boolean("u", "upper"
-				, GroupUser.options, "upper"
-				, "Display result in upper case characters"))
-		op.add(new OptParser.Boolean("r", "refs"
-				, GroupUser.options, "refs"
-				, "Display relations"))
-		op.add(new OptParser.Boolean("s", "sort"
-				, GroupUser.options, "sort"
-				, "Sort result"))
-		op.add(new OptParser.Boolean("v", "invert-match"
-				, GroupUser.options, "invert_match"
-				, "Show not matching results"))
-		op.add(new OptParser.Boolean(0, "color"
-				, GroupUser.options, "color"
-				, "Colored output "
-				. "(deactivated by default if -a or -o option is set)"
-				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
-		op.add(new OptParser.Boolean("R", "result-only"
-				, GroupUser.options, "result_only"
-				, "Suppress any other output than the found groups"))
-		op.add(new OptParser.Boolean(0, "ibm-nested-group"
-				, GroupUser.options, "ibmNestedGroups"
-				, "Only chase groups which implement "
-				. "objectclass ibm-nestedGroup"))
-		op.add(new OptParser.String(0, "max-nested-level"
-				, GroupUser.options, "max_nested_lv", "n"
-				, "Defines, which recursion depth terminates the process "
-				. "(default=32)"
-				,, GroupUser.options.max_nested_lv
-				, GroupUser.options.max_nested_lv))
-		op.add(new OptParser.Boolean(0, "env"
-				, GroupUser.options, "env_dummy"
-				, "Ignore environment variable GU_OPTIONS"
-				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
-		op.add(new OptParser.Boolean("q", "quiet"
-				, GroupUser.options, "quiet"
-				, "Suppress output of results"))
-		op.add(new OptParser.Boolean(0, "version"
-				, GroupUser.options, "version"
-				, "Print version info"))
-		op.add(new OptParser.Boolean(0, "help"
-				, GroupUser.options, "help"
-				, "Print help", OptParser.OPT_HIDDEN))
-		return op
 	}
 
 	class MemberData {
