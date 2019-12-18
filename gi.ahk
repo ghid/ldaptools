@@ -394,8 +394,6 @@ class GroupInfo {
 	}
 
 	processOutput(entry) {
-		text := entry.toString()
-		isDnMatchingTheFilter := true
 		if (!GroupInfo.options.quiet) {
 			try {
 				isDnMatchingTheFilter := GroupInfo.filterOutput(entry)
