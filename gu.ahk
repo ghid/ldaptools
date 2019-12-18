@@ -378,7 +378,7 @@ class GroupUser {
 		return GroupUser.ldapConnection.getDn(entry)
 	}
 
-	output(text) {
+	processOutput(text) {
 		res := true
 		try {
 			if (!GroupUser.options.quiet
@@ -451,7 +451,8 @@ class GroupUser {
 			if (cn := GroupUser.getCnOfMemberDn(memberDn)) {
 				if (GroupUser.ldap_is_group(cn)) {
 					memberData.nestedLevel++
-					if (memberData.nestedLevel > GroupUser.options.max_nested_lv) {
+					if (memberData.nestedLevel
+							> GroupUser.options.max_nested_lv) {
 						throw Exception("error: "
 								. "Cyclic reference detected: `n`t" memberDn "`n`t<- " groupCn ; ahklint-ignore: W002
 								,, GroupUser.RC_CYCLE_DETECTED)
@@ -460,7 +461,7 @@ class GroupUser {
 					memberData.nestedLevel--
 				} else {
 					if (memberData.memberList[memberDn] = "") {
-						if (GroupUser.output(GroupUser.format_output(memberDn
+						if (GroupUser.processOutput(GroupUser.format_output(memberDn
 								, (GroupUser.options.short
 								|| !GroupUser.options.refs
 								? groupCn
