@@ -27,12 +27,12 @@ class GroupUser {
 				, base_dn: ""
 				, color: false
 				, count: ""
-				, count_only: false
+				, countOnly: false
 				, filter: "*"
-				, group_filter: "groupOfNames"
+				, groupFilter: "groupOfNames"
 				, help: false
 				, host: "localhost"
-				, ibm_nested_group: false
+				, ibmNestedGroups: false
 				, ignore_case: -1
 				, invert_match: false
 				, lower: false
@@ -73,19 +73,13 @@ class GroupUser {
 									. "to false because of file output"
 					}
 				}
-				if (GroupUser.options.ibm_nested_group) {
-					GroupUser.options.group_filter := "ibm-nestedGroup"
-				}
-				if (!GroupUser.options.count_only
-						&& !GroupUser.options.result_only) {
-					Ansi.writeLine("Connecting to " GroupUser.options.host
-							. ":" GroupUser.options.port "...")
-				}
+				GroupUser.handleIBMnestedGroups()
+				GroupUser.handleCountOnly()
 				GroupUser.ldapConnection := new Ldap(GroupUser.options.host
 						, GroupUser.options.port)
 				GroupUser.ldapConnection.connect()
 				GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-				if (!GroupUser.options.count_only
+				if (!GroupUser.options.countOnly
 						&& !GroupUser.options.result_only) {
 					Ansi.writeLine("Ok.")
 					Ansi.writeLine(GroupUser.format_output(GroupUser
@@ -158,6 +152,37 @@ class GroupUser {
 					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
 		}
 		return ""
+	}
+
+	evaluateCommandLineOptions(args) {
+		if (args.maxIndex() < 1) {
+			throw Exception("error: Missing argument"
+					,, GroupUser.RC_MISSING_ARG)
+		}
+		if (GroupUser.options.output && GroupUser.options.append) {
+			throw Exception("error: Options '-o' and '-a' "
+					. "cannot be used together"
+					,, GroupUser.RC_INVALID_ARGS)
+		}
+		if (GroupUser.options.upper && GroupUser.options.lower) {
+			throw Exception("error: Options '-l' and '-u' "
+					. "cannot be used together"
+					,, GroupUser.RC_INVALID_ARGS)
+		}
+	}
+
+	handleIBMnestedGroups() {
+		if (GroupUser.options.ibmNestedGroups) {
+			GroupUser.options.groupFilter := "ibm-nestedGroup"
+		}
+	}
+
+	handleCountOnly() {
+		if (!GroupUser.options.countOnly
+				&& !GroupUser.options.result_only) {
+			Ansi.writeLine("Connecting to " GroupUser.options.host
+					. ":" GroupUser.options.port "...")
+		}
 	}
 
 	format_output(text, ref) {
@@ -238,7 +263,7 @@ class GroupUser {
 					GroupUser.out_h.writeLine((!GroupUser.options.output
 							&& !GroupUser.options.append
 							&& !GroupUser.options.result_only ? "	" : "") text)
-				} else if (!GroupUser.options.count_only) {
+				} else if (!GroupUser.options.countOnly) {
 					Ansi.writeLine((!GroupUser.options.result_only ? "	 ":"")
 							. text, true)
 				}
@@ -253,7 +278,7 @@ class GroupUser {
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
 		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn
-				, "(&(objectclass=" GroupUser.options.group_filter ")(cn=" groupCn "))"
+				, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" groupCn "))"
 				, Ldap.SCOPE_SUBTREE, ["member"])
 				== Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
@@ -315,7 +340,7 @@ class GroupUser {
 	ldap_is_group(cn) {
 		loop {
 			ret := GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn
-					, "(&(objectclass=" GroupUser.options.group_filter ")(cn=" cn "))")
+					, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" cn "))")
 		} until (ret != 80)
 		if (!ret == Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
@@ -345,7 +370,7 @@ class GroupUser {
 				, GroupUser.options, "count"
 				, "Display number of hits"))
 		op.add(new OptParser.Boolean("C", "count-only"
-				, GroupUser.options, "count_only"
+				, GroupUser.options, "countOnly"
 				, "Return the number of hits as exit code; no other output"))
 		op.add(new OptParser.Boolean("e", "regex"
 				, GroupUser.options, "regex"
@@ -390,7 +415,7 @@ class GroupUser {
 				, GroupUser.options, "result_only"
 				, "Suppress any other output than the found groups"))
 		op.add(new OptParser.Boolean(0, "ibm-nested-group"
-				, GroupUser.options, "ibm_nested_group"
+				, GroupUser.options, "ibmNestedGroups"
 				, "Only chase groups which implement "
 				. "objectclass ibm-nestedGroup"))
 		op.add(new OptParser.String(0, "max-nested-level"
@@ -413,23 +438,6 @@ class GroupUser {
 				, GroupUser.options, "help"
 				, "Print help", OptParser.OPT_HIDDEN))
 		return op
-	}
-
-	evaluateCommandLineOptions(args) {
-		if (args.maxIndex() < 1) {
-			throw Exception("error: Missing argument"
-					,, GroupUser.RC_MISSING_ARG)
-		}
-		if (GroupUser.options.output && GroupUser.options.append) {
-			throw Exception("error: Options '-o' and '-a' "
-					. "cannot be used together"
-					,, GroupUser.RC_INVALID_ARGS)
-		}
-		if (GroupUser.options.upper && GroupUser.options.lower) {
-			throw Exception("error: Options '-l' and '-u' "
-					. "cannot be used together"
-					,, GroupUser.RC_INVALID_ARGS)
-		}
 	}
 
 	class MemberData {
