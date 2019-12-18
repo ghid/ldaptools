@@ -266,7 +266,7 @@ class GroupUser {
 				&& !GroupUser.options.result_only) {
 			Ansi.writeLine("Ok.")
 			Ansi.writeLine(GroupUser.format_output(GroupUser
-					.ldap_get_dn("cn=" GroupUser.cn), ""))
+					.findDnByFilter("cn=" GroupUser.cn), ""))
 		}
 	}
 
@@ -354,7 +354,7 @@ class GroupUser {
 		return text ref
 	}
 
-	ldap_get_dn(ldapFilter) {
+	findDnByFilter(ldapFilter) {
 		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn, ldapFilter)
 				== Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
@@ -444,7 +444,7 @@ class GroupUser {
 												, (GroupUser.options.short
 												|| !GroupUser.options.refs
 												? groupCn
-												: GroupUser.ldap_get_dn("cn=" groupCn))))) { ; ahklint-ignore: W002
+												: GroupUser.findDnByFilter("cn=" groupCn))))) { ; ahklint-ignore: W002
 											memberData.numberOfMembers++
 										}
 										memberData.memberList[$] := 1
