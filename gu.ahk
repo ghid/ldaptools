@@ -275,18 +275,7 @@ class GroupUser {
 	}
 
 	distributeTempFileContent() {
-		content := ""
-		if (GroupUser.tempFileWasNecessary()) {
-			GroupUser.options.tempFile.close()
-			h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
-			content := h_gu.read(h_gu.Length)
-			h_gu.close()
-			; FileRead content, %A_Temp%\__gu__.dat
-			if (GroupUser.options.sort) {
-				Sort content
-			}
-			FileDelete %A_Temp%\__gu__.dat
-		}
+		file_name := "*"
 		if (GroupUser.options.append) {
 			file_name := GroupUser.options.append
 		}
@@ -295,15 +284,30 @@ class GroupUser {
 				FileDelete % GroupUser.options.output
 			}
 			file_name := GroupUser.options.output
-		} else {
-			file_name := "*"
 		}
+		GroupUser.writeTempFileContent(file_name)
+	}
+
+	writeTempFileContent(file_name) {
+		content := GroupUser.readContentFromTempFileAndDeleteIt()
 		if (file_name = "*") {
 			Ansi.write(content)
 		} else {
 			FileAppend %content%, %file_name%
 		}
+	}
+
+	readContentFromTempFileAndDeleteIt() {
 		content := ""
+		GroupUser.options.tempFile.close()
+		h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
+		content := h_gu.read(h_gu.Length)
+		h_gu.close()
+		if (GroupUser.options.sort) {
+			Sort content
+		}
+		FileDelete %A_Temp%\__gu__.dat
+		return content
 	}
 
 	format_output(text, ref) {
