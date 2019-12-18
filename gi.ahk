@@ -394,9 +394,9 @@ class GroupInfo {
 	processOutput(entry) {
 		text := entry.toString()
 		isOutputPrinted := true
-		if (GroupInfo.options.quiet == false) {
+		if (!GroupInfo.options.quiet) {
 			try {
-				isOutputPrinted := GroupInfo.filterOutput(text)
+				isOutputPrinted := GroupInfo.filterOutput(entry)
 			} catch gotException {
 				throw gotException
 			}
@@ -404,19 +404,19 @@ class GroupInfo {
 		return isOutputPrinted
 	}
 
-	filterOutput(text) {
-		if (isOutputPrinted := Ansi.plainStr(text)
+	filterOutput(entry) {
+		if (isOutputPrinted := entry.handleCase(entry.handleShort(entry.theDn))
 				.filter(GroupInfo.options.filter, GroupInfo.options.regex
 				, (GroupInfo.options.ignoreCase == true ? true : false)
 				, false
 				, match := "")) {
 			if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
-				text := ""
+				entry.theDn := ""
 				loop % match.count {
-					text .= match[GroupInfo.capturedRegExGroups[A_Index]]
+					entry.theDn .= match[GroupInfo.capturedRegExGroups[A_Index]]
 				}
 			}
-			GroupInfo.writeOutput(text)
+			GroupInfo.writeOutput(entry.toString())
 		}
 		return isOutputPrinted
 	}
