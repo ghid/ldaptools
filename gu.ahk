@@ -2,6 +2,10 @@
 ; ahk: console
 class GroupUser {
 
+	requires() {
+		return [Ansi, Ldap, OptParser, String, System]
+	}
+
 	static RC_OK := -1
 	static RC_MISSING_ARG := -2
 	static RC_INVALID_ARGS := -3
@@ -15,6 +19,8 @@ class GroupUser {
 	static out_file := ""
 	static cn := ""
 	static dn := ""
+
+	static ldapConnection := 0
 
 	setDefaults() {
 		return { append: ""
@@ -41,6 +47,117 @@ class GroupUser {
 				, sort: false
 				, upper: false
 				, version: false }
+	}
+
+	run(args) {
+		try {
+			rc := GroupUser.RC_OK
+			op := GroupUser.cli()
+			args := op.parse(args)
+			if (GroupUser.shallHelpOrVersionInfoBeDisplayed()) {
+				rc := GroupUser.showHelpOrVersionInfo(op)
+			} else {
+				GroupUser.evaluateCommandLineOptions(args)
+				GroupUser.cn := args[1]
+				if (args.maxIndex() == 2) {
+					GroupUser.options.filter := args[2]
+				}
+				if (GroupUser.options.sort
+						|| GroupUser.options.output
+						|| GroupUser.options.append) {
+					GroupUser.out_h := FileOpen(A_Temp "\__gu__.dat", "w`n")
+					if ((GroupUser.options.output || GroupUser.options.append)
+							&& GroupUser.options.color != true) {
+						GroupUser.options.color := false
+							OutputDebug % A_ThisFunc ": GroupUser.options.color has been set "
+									. "to false because of file output"
+					}
+				}
+				if (GroupUser.options.ibm_nested_group) {
+					GroupUser.options.group_filter := "ibm-nestedGroup"
+				}
+				if (!GroupUser.options.count_only
+						&& !GroupUser.options.result_only) {
+					Ansi.writeLine("Connecting to " GroupUser.options.host
+							. ":" GroupUser.options.port "...")
+				}
+				GroupUser.ldapConnection := new Ldap(GroupUser.options.host
+						, GroupUser.options.port)
+				GroupUser.ldapConnection.connect()
+				GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
+				if (!GroupUser.options.count_only
+						&& !GroupUser.options.result_only) {
+					Ansi.writeLine("Ok.")
+					Ansi.writeLine(GroupUser.format_output(GroupUser
+							.ldap_get_dn("cn=" GroupUser.cn), ""))
+				}
+				rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
+						, new GroupUser.MemberData())
+				; Handle sort and/or output options
+				; ---------------------------------
+				if (GroupUser.out_h) {
+					GroupUser.out_h.close()
+				}
+				content := ""
+				if (GroupUser.out_h) {
+					h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
+					content := h_gu.read(h_gu.Length)
+					h_gu.close()
+					; FileRead content, %A_Temp%\__gu__.dat
+					if (GroupUser.options.sort) {
+						Sort content
+					}
+					FileDelete %A_Temp%\__gu__.dat
+				}
+				if (GroupUser.options.append) {
+					file_name := GroupUser.options.append
+				}
+				else if (GroupUser.options.output) {
+					if (FileExist(GroupUser.options.output)) {
+						FileDelete % GroupUser.options.output
+					}
+					file_name := GroupUser.options.output
+				} else {
+					file_name := "*"
+				}
+				if (file_name = "*") {
+					Ansi.write(content)
+				} else {
+					FileAppend %content%, %file_name%
+				}
+				content := ""
+				if (GroupUser.options.count) {
+					Ansi.writeLine("`n" rc " Hit(s)")
+				}
+			}
+		} catch e {
+			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
+			Ansi.writeLine(e.message)
+			Ansi.writeLine(op.usage())
+			rc := e.Extra
+		} finally {
+			if (GroupUser.ldapConnection) {
+				GroupUser.ldapConnection.unbind()
+			}
+			if (GroupUser.out_h) {
+				GroupUser.out_h.close()
+			}
+		}
+		return rc
+	}
+
+	shallHelpOrVersionInfoBeDisplayed() {
+		return GroupUser.options.help || GroupUser.options.version
+	}
+
+	showHelpOrVersionInfo(optionParser) {
+		if (GroupUser.options.help) {
+			Ansi.writeLine(optionParser.usage())
+		} else if (GroupUser.options.version) {
+			Ansi.writeLine(G_VERSION_INFO.NAME "/"
+					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
+		}
+		return ""
 	}
 
 	format_output(text, ref) {
@@ -315,108 +432,6 @@ class GroupUser {
 		}
 	}
 
-	run(args) {
-		try {
-			rc := GroupUser.RC_OK
-			op := GroupUser.cli()
-			args := op.parse(args)
-
-			if (GroupUser.options.help) {
-				Ansi.writeLine(op.usage())
-				return ""
-			} else if (GroupUser.options.version) {
-				Ansi.writeLine(G_VERSION_INFO.NAME "/"
-						. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
-				return ""
-			}
-			GroupUser.evaluateCommandLineOptions(args)
-			GroupUser.cn := args[1]
-			if (args.maxIndex() == 2) {
-				GroupUser.options.filter := args[2]
-			}
-			if (GroupUser.options.sort
-					|| GroupUser.options.output
-					|| GroupUser.options.append) {
-				GroupUser.out_h := FileOpen(A_Temp "\__gu__.dat", "w`n")
-				if ((GroupUser.options.output || GroupUser.options.append)
-						&& GroupUser.options.color != true) {
-					GroupUser.options.color := false
-						OutputDebug % A_ThisFunc ": GroupUser.options.color has been set "
-								. "to false because of file output"
-				}
-			}
-			if (GroupUser.options.ibm_nested_group) {
-				GroupUser.options.group_filter := "ibm-nestedGroup"
-			}
-			if (!GroupUser.options.count_only
-					&& !GroupUser.options.result_only) {
-				Ansi.writeLine("Connecting to " GroupUser.options.host
-						. ":" GroupUser.options.port "...")
-			}
-			GroupUser.ldapConnection := new Ldap(GroupUser.options.host
-					, GroupUser.options.port)
-			GroupUser.ldapConnection.connect()
-			GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-			if (!GroupUser.options.count_only
-					&& !GroupUser.options.result_only) {
-				Ansi.writeLine("Ok.")
-				Ansi.writeLine(GroupUser.format_output(GroupUser
-						.ldap_get_dn("cn=" GroupUser.cn), ""))
-			}
-			rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
-					, new GroupUser.MemberData())
-			; Handle sort and/or output options
-			; ---------------------------------
-			if (GroupUser.out_h) {
-				GroupUser.out_h.close()
-			}
-			content := ""
-			if (GroupUser.out_h) {
-				h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
-				content := h_gu.read(h_gu.Length)
-				h_gu.close()
-				; FileRead content, %A_Temp%\__gu__.dat
-				if (GroupUser.options.sort) {
-					Sort content
-				}
-				FileDelete %A_Temp%\__gu__.dat
-			}
-			if (GroupUser.options.append) {
-				file_name := GroupUser.options.append
-			}
-			else if (GroupUser.options.output) {
-				if (FileExist(GroupUser.options.output)) {
-					FileDelete % GroupUser.options.output
-				}
-				file_name := GroupUser.options.output
-			} else {
-				file_name := "*"
-			}
-			if (file_name = "*") {
-				Ansi.write(content)
-			} else {
-				FileAppend %content%, %file_name%
-			}
-			content := ""
-			if (GroupUser.options.count) {
-				Ansi.writeLine("`n" rc " Hit(s)")
-			}
-		} catch e {
-			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
-			Ansi.writeLine(e.message)
-			Ansi.writeLine(op.usage())
-			rc := e.Extra
-		} finally {
-			if (GroupUser.ldapConnection) {
-				GroupUser.ldapConnection.unbind()
-			}
-			if (GroupUser.out_h) {
-				GroupUser.out_h.close()
-			}
-		}
-		return rc
-	}
-
 	class MemberData {
 		numberOfMembers := 0
 		nestedLevel := 0
@@ -440,9 +455,12 @@ SendMode Input
 
 #Include <App>
 #Include <cui-libs>
-#Include <System>
 #Include <Ldap>
+#Include <System>
 #Include *i %A_ScriptDir%\gu.versioninfo
+
+#Include <modules\structure\LDAPAPIInfo>
+#Include <modules\structure\LDAPMod>
 
 Ansi.NO_BUFFER := true
 exitapp App.checkRequiredClasses(GroupUser).run(A_Args)	; notest-end
