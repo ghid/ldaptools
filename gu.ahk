@@ -299,9 +299,9 @@ class GroupUser {
 	readContentFromTempFileAndDeleteIt() {
 		content := ""
 		GroupUser.options.tempFile.close()
-		h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
-		content := h_gu.read(h_gu.Length)
-		h_gu.close()
+		tempFile := FileOpen(A_Temp "\__gu__.dat", "r`n")
+		content := tempFile.read(tempFile.Length)
+		tempFile.close()
 		if (GroupUser.options.sort) {
 			Sort content
 		}
