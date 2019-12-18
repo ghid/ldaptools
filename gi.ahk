@@ -54,6 +54,34 @@ class GroupInfo {
 				, version: false }
 	}
 
+	run(commandLineArguments) {
+		try {
+			returnCode := GroupInfo.RC_OK
+			optionParser := GroupInfo.cli()
+			parsedArguments := optionParser.parse(commandLineArguments)
+			if (GroupInfo.shallHelpOrVersionInfoBeDisplayed()) {
+				returnCode := GroupInfo.showHelpOrVersionInfo(optionParser)
+			} else {
+				GroupInfo.evaluateCommandLineOptions(parsedArguments)
+				GroupInfo.handleRegExCaptureGroups()
+				GroupInfo.handleIBMnestedGroups()
+				GroupInfo.handleRegExFilter()
+				GroupInfo.handleParsedArguments(parsedArguments)
+				GroupInfo.handleCountOnly()
+				returnCode := GroupInfo.handleHitCount(GroupInfo.main())
+			}
+		} catch gotException {
+			OutputDebug % gotException.what
+					. "`nin: " gotException.file " #" gotException.line
+			Ansi.writeLine(gotException.message)
+			Ansi.writeLine(optionParser.usage())
+		}
+		finally {
+			GroupInfo.doCleanup()
+		}
+		return returnCode
+	}
+
 	cli() {
 		op := new OptParser("gi [-a <filename> | -o <filename>] [options] "
 				. "<cn> [filter]",, "GI_OPTIONS")
@@ -130,34 +158,6 @@ class GroupInfo {
 		op.add(new OptParser.Boolean(0, "help", GroupInfo.options, "help"
 				, "Print help", OptParser.OPT_HIDDEN))
 		return op
-	}
-
-	run(commandLineArguments) {
-		try {
-			returnCode := GroupInfo.RC_OK
-			optionParser := GroupInfo.cli()
-			parsedArguments := optionParser.parse(commandLineArguments)
-			if (GroupInfo.shallHelpOrVersionInfoBeDisplayed()) {
-				returnCode := GroupInfo.showHelpOrVersionInfo(optionParser)
-			} else {
-				GroupInfo.evaluateCommandLineOptions(parsedArguments)
-				GroupInfo.handleRegExCaptureGroups()
-				GroupInfo.handleIBMnestedGroups()
-				GroupInfo.handleRegExFilter()
-				GroupInfo.handleParsedArguments(parsedArguments)
-				GroupInfo.handleCountOnly()
-				returnCode := GroupInfo.handleHitCount(GroupInfo.main())
-			}
-		} catch gotException {
-			OutputDebug % gotException.what
-					. "`nin: " gotException.file " #" gotException.line
-			Ansi.writeLine(gotException.message)
-			Ansi.writeLine(optionParser.usage())
-		}
-		finally {
-			GroupInfo.doCleanup()
-		}
-		return returnCode
 	}
 
 	shallHelpOrVersionInfoBeDisplayed() {
