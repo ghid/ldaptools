@@ -239,39 +239,9 @@ class GroupUser {
 		GroupUser.connectToLdapServer()
 		rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
 				, new GroupUser.MemberData())
-		; Handle sort and/or output options
-		; ---------------------------------
-		if (GroupUser.options.tempFile) {
-			GroupUser.options.tempFile.close()
+		if (GroupUser.tempFileWasNecessary()) {
+			GroupUser.distributeTempFileContent()
 		}
-		content := ""
-		if (GroupUser.options.tempFile) {
-			h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
-			content := h_gu.read(h_gu.Length)
-			h_gu.close()
-			; FileRead content, %A_Temp%\__gu__.dat
-			if (GroupUser.options.sort) {
-				Sort content
-			}
-			FileDelete %A_Temp%\__gu__.dat
-		}
-		if (GroupUser.options.append) {
-			file_name := GroupUser.options.append
-		}
-		else if (GroupUser.options.output) {
-			if (FileExist(GroupUser.options.output)) {
-				FileDelete % GroupUser.options.output
-			}
-			file_name := GroupUser.options.output
-		} else {
-			file_name := "*"
-		}
-		if (file_name = "*") {
-			Ansi.write(content)
-		} else {
-			FileAppend %content%, %file_name%
-		}
-		content := ""
 		return rc
 	}
 
@@ -298,6 +268,42 @@ class GroupUser {
 			Ansi.writeLine(GroupUser.format_output(GroupUser
 					.ldap_get_dn("cn=" GroupUser.cn), ""))
 		}
+	}
+
+	tempFileWasNecessary() {
+		return IsObject(GroupUser.options.tempFile)
+	}
+
+	distributeTempFileContent() {
+		content := ""
+		if (GroupUser.tempFileWasNecessary()) {
+			GroupUser.options.tempFile.close()
+			h_gu := FileOpen(A_Temp "\__gu__.dat", "r`n")
+			content := h_gu.read(h_gu.Length)
+			h_gu.close()
+			; FileRead content, %A_Temp%\__gu__.dat
+			if (GroupUser.options.sort) {
+				Sort content
+			}
+			FileDelete %A_Temp%\__gu__.dat
+		}
+		if (GroupUser.options.append) {
+			file_name := GroupUser.options.append
+		}
+		else if (GroupUser.options.output) {
+			if (FileExist(GroupUser.options.output)) {
+				FileDelete % GroupUser.options.output
+			}
+			file_name := GroupUser.options.output
+		} else {
+			file_name := "*"
+		}
+		if (file_name = "*") {
+			Ansi.write(content)
+		} else {
+			FileAppend %content%, %file_name%
+		}
+		content := ""
 	}
 
 	format_output(text, ref) {
