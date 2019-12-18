@@ -24,7 +24,7 @@ class GroupUser {
 
 	setDefaults() {
 		return { append: ""
-				, base_dn: ""
+				, baseDn: ""
 				, color: false
 				, count: ""
 				, countOnly: false
@@ -355,7 +355,7 @@ class GroupUser {
 	}
 
 	findDnByFilter(ldapFilter) {
-		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn, ldapFilter)
+		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn, ldapFilter)
 				== Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
 					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
@@ -401,7 +401,7 @@ class GroupUser {
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
-		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn
+		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn
 				, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" groupCn "))"
 				, Ldap.SCOPE_SUBTREE, ["member"])
 				== Ldap.LDAP_SUCCESS) {
@@ -463,7 +463,7 @@ class GroupUser {
 
 	ldap_is_group(cn) {
 		loop {
-			ret := GroupUser.ldapConnection.search(searchResult, GroupUser.options.base_dn
+			ret := GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn
 					, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" cn "))")
 		} until (ret != 80)
 		if (!ret == Ldap.LDAP_SUCCESS) {
