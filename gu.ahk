@@ -236,16 +236,7 @@ class GroupUser {
 
 	main() {
 		GroupUser.openTempFileIfNecessary()
-		GroupUser.ldapConnection := new Ldap(GroupUser.options.host
-				, GroupUser.options.port)
-		GroupUser.ldapConnection.connect()
-		GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-		if (!GroupUser.options.countOnly
-				&& !GroupUser.options.result_only) {
-			Ansi.writeLine("Ok.")
-			Ansi.writeLine(GroupUser.format_output(GroupUser
-					.ldap_get_dn("cn=" GroupUser.cn), ""))
-		}
+		GroupUser.connectToLdapServer()
 		rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
 				, new GroupUser.MemberData())
 		; Handle sort and/or output options
@@ -293,6 +284,19 @@ class GroupUser {
 				GroupUser.options.color := false
 			}
 			GroupUser.options.tempFile := FileOpen(A_Temp "\__gu__.dat", "w`n")
+		}
+	}
+
+	connectToLdapServer() {
+		GroupUser.ldapConnection := new Ldap(GroupUser.options.host
+				, GroupUser.options.port)
+		GroupUser.ldapConnection.connect()
+		GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
+		if (!GroupUser.options.countOnly
+				&& !GroupUser.options.result_only) {
+			Ansi.writeLine("Ok.")
+			Ansi.writeLine(GroupUser.format_output(GroupUser
+					.ldap_get_dn("cn=" GroupUser.cn), ""))
 		}
 	}
 
