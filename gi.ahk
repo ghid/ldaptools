@@ -408,18 +408,7 @@ class GroupInfo {
 						text .= match[GroupInfo.capturedRegExGroups[A_Index]]
 					}
 				}
-				if (GroupInfo.options.tempFile) {
-					GroupInfo.options.tempFile.writeLine(((
-							!GroupInfo.options.output
-							&& !GroupInfo.options.append
-							&& !GroupInfo.options.resultOnly)
-							? "   " : "") text)
-				}
-				else if (!GroupInfo.options.countOnly) {
-					Ansi.writeLine((!GroupInfo.options.resultOnly
-							? "   "
-							: "") text, true)
-				}
+				GroupInfo.writeOutput(text)
 			}
 		}
 		catch gotException {
@@ -427,6 +416,20 @@ class GroupInfo {
 			throw gotException
 		}
 		return isOutputPrinted
+	}
+
+	writeOutput(text) {
+		if (GroupInfo.options.tempFile) {
+			GroupInfo.options.tempFile.writeLine(((
+					!GroupInfo.options.output
+					&& !GroupInfo.options.append
+					&& !GroupInfo.options.resultOnly)
+					? "   " : "") text)
+		} else if (!GroupInfo.options.countOnly) {
+			Ansi.writeLine((!GroupInfo.options.resultOnly
+					? "   "
+					: "") text)
+		}
 	}
 
 	readContentFromTempFileAndDeleteIt() {
