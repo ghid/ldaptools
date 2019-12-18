@@ -401,18 +401,16 @@ class GroupUser {
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
-		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn
-				, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" groupCn "))"
-				, Ldap.SCOPE_SUBTREE, ["member"])
-				== Ldap.LDAP_SUCCESS) {
+		ldapFilter := Format("(&(objectclass={:s})(cn={:s}))"
+				, GroupUser.options.groupFilter, groupCn)
+		if (!GroupUser.ldapConnection.search(searchResult
+				, GroupUser.options.baseDn, ldapFilter
+				, Ldap.SCOPE_SUBTREE, ["member"]) == Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
 					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
 		}
-		if ((iCount := GroupUser.ldapConnection.countEntries(searchResult)) < 0) {
-			throw Exception("error: "
-					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
-		}
-		loop %iCount% {
+		numberOfEntriesFound := GroupUser.checkNumberOfEntries(searchResult)
+		loop %numberOfEntriesFound% {
 			if (A_Index = 1) {
 				member := GroupUser.ldapConnection.firstEntry(searchResult)
 			} else {
@@ -424,8 +422,7 @@ class GroupUser {
 					System.strCpy(pAttr, stAttr)
 					if (stAttr = "member") {
 						pValues := GroupUser.ldapConnection.getValues(member, pAttr)
-						; aValues := System.ptrListToStrArray(pValues)
-						aValues := Structure.ptrListToStrArray(pValues)
+						aValues := System.ptrListToStrArray(pValues)
 						loop % aValues.maxIndex() {
 							if (RegExMatch(aValues[A_Index]
 									, "i)cn=(.+?)\s*(,.*$|$)", $)) {
@@ -461,10 +458,22 @@ class GroupUser {
 		return memberData.numberOfMembers
 	}
 
+	checkNumberOfEntries(searchResult) {
+		numberOfEntriesFound
+				:= GroupUser.ldapConnection.countEntries(searchResult)
+		if (numberOfEntriesFound < 0) {
+			throw Exception("error: "
+					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
+		}
+		return numberOfEntriesFound
+	}
+
 	ldap_is_group(cn) {
 		loop {
-			ret := GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn
-					, "(&(objectclass=" GroupUser.options.groupFilter ")(cn=" cn "))")
+			ret := GroupUser.ldapConnection.search(searchResult
+					, GroupUser.options.baseDn
+					, "(&(objectclass=" GroupUser.options.groupFilter
+					. ")(cn=" cn "))")
 		} until (ret != 80)
 		if (!ret == Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
