@@ -409,16 +409,21 @@ class GroupInfo {
 				.filter(GroupInfo.options.filter, GroupInfo.options.regex
 				, (GroupInfo.options.ignoreCase == true ? true : false)
 				, false
-				, match := "")) {
-			if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
-				entry.theDn := ""
-				loop % match.count {
-					entry.theDn .= match[GroupInfo.capturedRegExGroups[A_Index]]
-				}
-			}
+				, matches := "")) {
+			entry.theDn := GroupInfo.rewriteDnWithMatches(entry.theDn, matches)
 			GroupInfo.writeOutput(entry.toString())
 		}
 		return isOutputPrinted
+	}
+
+	rewriteDnWithMatches(dn, matches) {
+		if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
+			dn := ""
+			loop % matches.count {
+				dn .= matches[GroupInfo.capturedRegExGroups[A_Index]]
+			}
+		}
+		return dn
 	}
 
 	writeOutput(text) {

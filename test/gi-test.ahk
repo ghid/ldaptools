@@ -144,9 +144,9 @@ class GroupInfoTest extends TestCase {
 
 	@Test_simple() {
 		this.assertEquals(GroupInfo.run(["-p", "10389", "snoopy"]), 3)
-		this.assertEquals(TestCase.fileContent(GroupInfoTest
-				.figures "\simple.txt")
-				, TestCase.fileContent(GroupInfoTest.output))
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				,TestCase.fileContent(GroupInfoTest
+				.figures "\simple.txt"))
 	}
 
 	@Test_simpleUpperCase() {
