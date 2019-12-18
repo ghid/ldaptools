@@ -329,10 +329,12 @@ class GroupInfo {
 			attributeValues := GroupInfo.ldapConnection.getValues(memberEntry
 					, ibmAllGroupsAttribute)
 			groupsOfCn := System.ptrListToStrArray(attributeValues)
-			numberOfGroups := groupsOfCn.maxIndex()
-			loop %numberOfGroups% {
-				GroupInfo.processOutput(new GroupInfo.Entry(groupsOfCn[A_Index]
-						, ""))
+			numberOfGroups := 0
+			loop % groupsOfCn.count() {
+				if (GroupInfo.processOutput(new GroupInfo
+						.Entry(groupsOfCn[A_Index], ""))) {
+					numberOfGroups++
+				}
 			}
 		}
 		return numberOfGroups
