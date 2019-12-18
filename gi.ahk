@@ -468,10 +468,10 @@ class GroupInfo {
 				FileDelete %fileName%
 			}
 		}
-		GroupInfo.writeOutput(fileName)
+		GroupInfo.writeTempFileContent(fileName)
 	}
 
-	writeOutput(fileName) {
+	writeTempFileContent(fileName) {
 		content := GroupInfo.readContentFromTempFileAndDeleteIt()
 		if (fileName = "*") {
 			Ansi.write(content)
