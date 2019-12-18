@@ -275,25 +275,24 @@ class GroupUser {
 	}
 
 	distributeTempFileContent() {
-		file_name := "*"
+		fileName := "*"
 		if (GroupUser.options.append) {
-			file_name := GroupUser.options.append
-		}
-		else if (GroupUser.options.output) {
-			if (FileExist(GroupUser.options.output)) {
-				FileDelete % GroupUser.options.output
+			fileName := GroupUser.options.append
+		} else if (GroupUser.options.output) {
+			fileName := GroupUser.options.output
+			if (FileExist(fileName)) {
+				FileDelete %fileName%
 			}
-			file_name := GroupUser.options.output
 		}
-		GroupUser.writeTempFileContent(file_name)
+		GroupUser.writeTempFileContent(fileName)
 	}
 
-	writeTempFileContent(file_name) {
+	writeTempFileContent(fileName) {
 		content := GroupUser.readContentFromTempFileAndDeleteIt()
-		if (file_name = "*") {
+		if (fileName = "*") {
 			Ansi.write(content)
 		} else {
-			FileAppend %content%, %file_name%
+			FileAppend %content%, %fileName%
 		}
 	}
 
