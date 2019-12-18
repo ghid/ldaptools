@@ -6,6 +6,9 @@ class GroupUser {
 		return [Ansi, Ldap, OptParser, String, System]
 	}
 
+	#Include %A_LineFile%\..\modules
+	#Include entry.ahk
+
 	static RC_OK := -1
 	static RC_MISSING_ARG := -2
 	static RC_INVALID_ARGS := -3
@@ -411,46 +414,16 @@ class GroupUser {
 		}
 		numberOfEntriesFound := GroupUser.checkNumberOfEntries(searchResult)
 		loop %numberOfEntriesFound% {
-			if (A_Index = 1) {
-				member := GroupUser.ldapConnection.firstEntry(searchResult)
-			} else {
-				member := GroupUser.ldapConnection.nextEntry(member)
-			}
+			member := (A_Index == 1
+					? GroupUser.ldapConnection.firstEntry(searchResult)
+					: GroupUser.ldapConnection.nextEntry(member))
 			if (member) {
 				pAttr := GroupUser.ldapConnection.firstAttribute(member)
 				while (pAttr) {
-					System.strCpy(pAttr, stAttr)
-					if (stAttr = "member") {
-						pValues := GroupUser.ldapConnection.getValues(member, pAttr)
-						aValues := System.ptrListToStrArray(pValues)
-						loop % aValues.maxIndex() {
-							if (RegExMatch(aValues[A_Index]
-									, "i)cn=(.+?)\s*(,.*$|$)", $)) {
-								if (GroupUser.ldap_is_group($1)) {
-									memberData.nestedLevel++
-									if (memberData.nestedLevel>GroupUser.options.max_nested_lv) {
-										throw Exception("error: "
-												. "Cyclic reference detected: `n`t" $ "`n`t<- " groupCn ; ahklint-ignore: W002
-												,, GroupUser.RC_CYCLE_DETECTED)
-									}
-									GroupUser.membersOfGroupsAndSubGroups($1, memberData)
-									memberData.nestedLevel--
-								} else {
-									if (memberData.memberList[$] = "") {
-										if (GroupUser.output(GroupUser.format_output($ ; ahklint-ignore: W002
-												, (GroupUser.options.short
-												|| !GroupUser.options.refs
-												? groupCn
-												: GroupUser.findDnByFilter("cn=" groupCn))))) { ; ahklint-ignore: W002
-											memberData.numberOfMembers++
-										}
-										memberData.memberList[$] := 1
-									}
-								}
-							}
-						}
-						break
-					}
+					pValues := GroupUser.ldapConnection.getValues(member, pAttr)
+					aValues := System.ptrListToStrArray(pValues)
+					GroupUser.processMembersOfGroup(aValues, groupCn
+							, memberData)
 					pAttr := GroupUser.ldapConnection.nextAttribute(member)
 				}
 			}
@@ -468,13 +441,46 @@ class GroupUser {
 		return numberOfEntriesFound
 	}
 
+	getCnOfMemberDn(memberDn) {
+		RegExMatch(memberDn, "i)cn=(.+?)\s*(,.*$|$)", $)
+		return $1
+	}
+
+	processMembersOfGroup(aValues, groupCn, memberData) {
+		for _, memberDn in aValues {
+			if (cn := GroupUser.getCnOfMemberDn(memberDn)) {
+				if (GroupUser.ldap_is_group(cn)) {
+					memberData.nestedLevel++
+					if (memberData.nestedLevel > GroupUser.options.max_nested_lv) {
+						throw Exception("error: "
+								. "Cyclic reference detected: `n`t" memberDn "`n`t<- " groupCn ; ahklint-ignore: W002
+								,, GroupUser.RC_CYCLE_DETECTED)
+					}
+					GroupUser.membersOfGroupsAndSubGroups(cn, memberData)
+					memberData.nestedLevel--
+				} else {
+					if (memberData.memberList[memberDn] = "") {
+						if (GroupUser.output(GroupUser.format_output(memberDn
+								, (GroupUser.options.short
+								|| !GroupUser.options.refs
+								? groupCn
+								: GroupUser.findDnByFilter("cn=" groupCn))))) {
+							memberData.numberOfMembers++
+						}
+						memberData.memberList[memberDn] := 1
+					}
+				}
+			}
+		}
+	}
+
 	ldap_is_group(cn) {
 		loop {
 			ret := GroupUser.ldapConnection.search(searchResult
 					, GroupUser.options.baseDn
 					, "(&(objectclass=" GroupUser.options.groupFilter
 					. ")(cn=" cn "))")
-		} until (ret != 80)
+		} until (ret != 80) ; @todo: Find out, why this is necessary
 		if (!ret == Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
 					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
