@@ -240,12 +240,12 @@ class GroupUser {
 	main() {
 		GroupUser.openTempFileIfNecessary()
 		GroupUser.connectToLdapServer()
-		rc := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
+		numberOfHits := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
 				, new GroupUser.MemberData())
 		if (GroupUser.tempFileWasNecessary()) {
 			GroupUser.distributeTempFileContent()
 		}
-		return rc
+		return numberOfHits
 	}
 
 	openTempFileIfNecessary() {
