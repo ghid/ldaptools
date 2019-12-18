@@ -267,7 +267,7 @@ class GroupInfo {
 				: GroupInfo.groupsInWhichDnIsMember(dn
 				, new GroupInfo.GroupData))
 		if (GroupInfo.tempFileWasNecessary()) {
-			GroupInfo.distributeOutput()
+			GroupInfo.distributeTempFileContent()
 		}
 		return numberOfHits
 	}
@@ -458,7 +458,7 @@ class GroupInfo {
 		return IsObject(GroupInfo.options.tempFile)
 	}
 
-	distributeOutput() {
+	distributeTempFileContent() {
 		fileName := "*"
 		if (GroupInfo.options.append) {
 			fileName := GroupInfo.options.append
