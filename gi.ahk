@@ -393,19 +393,20 @@ class GroupInfo {
 
 	processOutput(entry) {
 		text := entry.toString()
-		isOutputPrinted := true
+		isDnMatchingTheFilter := true
 		if (!GroupInfo.options.quiet) {
 			try {
-				isOutputPrinted := GroupInfo.filterOutput(entry)
+				isDnMatchingTheFilter := GroupInfo.filterOutput(entry)
 			} catch gotException {
 				throw gotException
 			}
 		}
-		return isOutputPrinted
+		return isDnMatchingTheFilter
 	}
 
 	filterOutput(entry) {
-		if (isOutputPrinted := entry.handleCase(entry.handleShort(entry.theDn))
+		if (isDnMatchingTheFilter
+				:= entry.handleCase(entry.handleShort(entry.theDn))
 				.filter(GroupInfo.options.filter, GroupInfo.options.regex
 				, (GroupInfo.options.ignoreCase == true ? true : false)
 				, false
@@ -413,7 +414,7 @@ class GroupInfo {
 			entry.theDn := GroupInfo.rewriteDnWithMatches(entry.theDn, matches)
 			GroupInfo.writeOutput(entry.toString())
 		}
-		return isOutputPrinted
+		return isDnMatchingTheFilter
 	}
 
 	rewriteDnWithMatches(dn, matches) {
