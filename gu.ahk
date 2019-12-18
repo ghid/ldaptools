@@ -128,12 +128,7 @@ class GroupUser {
 			Ansi.writeLine(op.usage())
 			rc := e.Extra
 		} finally {
-			if (GroupUser.ldapConnection) {
-				GroupUser.ldapConnection.unbind()
-			}
-			if (GroupUser.out_h) {
-				GroupUser.out_h.close()
-			}
+			GroupUser.doCleanup()
 		}
 		return rc
 	}
@@ -191,6 +186,15 @@ class GroupUser {
 				&& !GroupUser.options.result_only) {
 			Ansi.writeLine("Connecting to " GroupUser.options.host
 					. ":" GroupUser.options.port "...")
+		}
+	}
+
+	doCleanup() {
+		if (GroupUser.ldapConnection) {
+			GroupUser.ldapConnection.unbind()
+		}
+		if (GroupUser.out_h) {
+			GroupUser.out_h.close()
 		}
 	}
 
