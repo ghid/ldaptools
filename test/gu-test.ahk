@@ -26,6 +26,7 @@ class GroupUserTest extends TestCase {
 		RC_CYCLE_DETECTED := -4
 		RC_CN_NOT_FOUND := -5
 		RC_CN_AMBIGOUS := -6
+		RC_TOO_MANY_ARGS := -7
 
 		G_LDAP_CONN := 0
 		Ansi.NO_BUFFER := true

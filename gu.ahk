@@ -12,6 +12,7 @@ class GroupUser {
 	static RC_CYCLE_DETECTED := -4
 	static RC_CN_NOT_FOUND := -5
 	static RC_CN_AMBIGOUS := -6
+	static RC_TOO_MANY_ARGS := -7
 
 	static options := GroupUser.setDefaults()
 
@@ -58,10 +59,6 @@ class GroupUser {
 				rc := GroupUser.showHelpOrVersionInfo(op)
 			} else {
 				GroupUser.evaluateCommandLineOptions(args)
-				GroupUser.cn := args[1]
-				if (args.maxIndex() == 2) {
-					GroupUser.options.filter := args[2]
-				}
 				if (GroupUser.options.sort
 						|| GroupUser.options.output
 						|| GroupUser.options.append) {
@@ -74,6 +71,7 @@ class GroupUser {
 					}
 				}
 				GroupUser.handleIBMnestedGroups()
+				GroupUser.handleParsedArguments(args)
 				GroupUser.handleCountOnly()
 				GroupUser.ldapConnection := new Ldap(GroupUser.options.host
 						, GroupUser.options.port)
@@ -155,9 +153,13 @@ class GroupUser {
 	}
 
 	evaluateCommandLineOptions(args) {
-		if (args.maxIndex() < 1) {
+		if (args.count() < 1) {
 			throw Exception("error: Missing argument"
 					,, GroupUser.RC_MISSING_ARG)
+		}
+		if (args.count() > 2) {
+			throw Exception("error: Too many arguments"
+					,, GroupUser.RC_TOO_MANY_ARGS)
 		}
 		if (GroupUser.options.output && GroupUser.options.append) {
 			throw Exception("error: Options '-o' and '-a' "
@@ -174,6 +176,13 @@ class GroupUser {
 	handleIBMnestedGroups() {
 		if (GroupUser.options.ibmNestedGroups) {
 			GroupUser.options.groupFilter := "ibm-nestedGroup"
+		}
+	}
+
+	handleParsedArguments(parsedArguments) {
+		GroupUser.cn := parsedArguments[1]
+		if (parsedArguments.count() == 2) {
+			GroupUser.options.filter := parsedArguments[2]
 		}
 	}
 
