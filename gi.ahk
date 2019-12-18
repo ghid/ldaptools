@@ -391,29 +391,32 @@ class GroupInfo {
 		return numberOfEntriesFound
 	}
 
-	; @todo: Refactor!
 	processOutput(entry) {
 		text := entry.toString()
 		isOutputPrinted := true
-		try {
-			if (!GroupInfo.options.quiet
-					&& isOutputPrinted := Ansi.plainStr(text)
-					.filter(GroupInfo.options.filter, GroupInfo.options.regex
-					, (GroupInfo.options.ignoreCase == true ? true : false)
-					, false
-					, match := "")) {
-				if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
-					text := ""
-					loop % match.count {
-						text .= match[GroupInfo.capturedRegExGroups[A_Index]]
-					}
-				}
-				GroupInfo.writeOutput(text)
+		if (GroupInfo.options.quiet == false) {
+			try {
+				isOutputPrinted := GroupInfo.filterOutput(text)
+			} catch gotException {
+				throw gotException
 			}
 		}
-		catch gotException {
-			isOutputPrinted := false
-			throw gotException
+		return isOutputPrinted
+	}
+
+	filterOutput(text) {
+		if (isOutputPrinted := Ansi.plainStr(text)
+				.filter(GroupInfo.options.filter, GroupInfo.options.regex
+				, (GroupInfo.options.ignoreCase == true ? true : false)
+				, false
+				, match := "")) {
+			if (GroupInfo.capturedRegExGroups.maxIndex() != "") {
+				text := ""
+				loop % match.count {
+					text .= match[GroupInfo.capturedRegExGroups[A_Index]]
+				}
+			}
+			GroupInfo.writeOutput(text)
 		}
 		return isOutputPrinted
 	}
