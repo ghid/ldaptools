@@ -189,6 +189,22 @@ class GroupUserTest extends TestCase {
 				. "\resultOnly.txt"))
 	}
 
+	@Test_search() {
+		this.assertEquals(GroupUser.run(["-p", "10389", "-1re", "Peanuts"
+				, "y$"]), 2)
+		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
+				, TestCase.fileContent(GroupUserTest.figures
+				. "\search.txt"))
+	}
+
+	@Test_searchInvertWithCount() {
+		this.assertEquals(GroupUser.run(["-p", "10389", "-1revc", "Peanuts"
+				, "y$"]), 5)
+		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
+				, TestCase.fileContent(GroupUserTest.figures
+				. "\searchInvertWithCount.txt"))
+	}
+
 	@Test_resultOnlySorted() {
 		this.assertEquals(GroupUser.run(["-p", "10389", "-1R", "--sort"
 				, "Peanuts"]), 7)
