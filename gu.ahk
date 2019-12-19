@@ -37,7 +37,7 @@ class GroupUser {
 				, host: "localhost"
 				, ibmNestedGroups: false
 				, ignoreCase: -1
-				, invert_match: false
+				, invertMatch: false
 				, lower: false
 				, max_nested_lv: 32
 				, output: ""
@@ -129,7 +129,7 @@ class GroupUser {
 				, GroupUser.options, "sort"
 				, "Sort result"))
 		op.add(new OptParser.Boolean("v", "invert-match"
-				, GroupUser.options, "invert_match"
+				, GroupUser.options, "invertMatch"
 				, "Show not matching results"))
 		op.add(new OptParser.Boolean(0, "color"
 				, GroupUser.options, "color"
@@ -348,7 +348,7 @@ class GroupUser {
 		if (res := entry.handleCase(entry.handleShort(entry.dn))
 				.filter(GroupUser.options.filter, GroupUser.options.regex
 				, (GroupUser.options.ignoreCase = true ? true : false)
-				, GroupUser.options.invert_match)) {
+				, GroupUser.options.invertMatch)) {
 			GroupUser.writeOutput(entry.toString())
 		}
 		return res
