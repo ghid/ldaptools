@@ -449,7 +449,7 @@ class GroupUser {
 	processMembersOfGroup(aValues, groupCn, memberData) {
 		for _, memberDn in aValues {
 			if (cn := GroupUser.getCnOfMemberDn(memberDn)) {
-				if (GroupUser.ldap_is_group(cn)) {
+				if (GroupUser.isCnAGroup(cn)) {
 					memberData.nestedLevel++
 					if (memberData.nestedLevel
 							> GroupUser.options.max_nested_lv) {
@@ -475,7 +475,7 @@ class GroupUser {
 		}
 	}
 
-	ldap_is_group(cn) {
+	isCnAGroup(cn) {
 		loop {
 			ret := GroupUser.ldapConnection.search(searchResult
 					, GroupUser.options.baseDn
