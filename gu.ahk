@@ -45,7 +45,7 @@ class GroupUser {
 				, quiet: false
 				, refs: false
 				, regex: false
-				, result_only: false
+				, resultOnly: false
 				, short: false
 				, sort: false
 				, tempFile: 0
@@ -137,7 +137,7 @@ class GroupUser {
 				. "(deactivated by default if -a or -o option is set)"
 				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE, -1, true))
 		op.add(new OptParser.Boolean("R", "result-only"
-				, GroupUser.options, "result_only"
+				, GroupUser.options, "resultOnly"
 				, "Suppress any other output than the found groups"))
 		op.add(new OptParser.Boolean(0, "ibm-nested-group"
 				, GroupUser.options, "ibmNestedGroups"
@@ -215,7 +215,7 @@ class GroupUser {
 
 	handleCountOnly() {
 		if (!GroupUser.options.countOnly
-				&& !GroupUser.options.result_only) {
+				&& !GroupUser.options.resultOnly) {
 			Ansi.writeLine("Connecting to " GroupUser.options.host
 					. ":" GroupUser.options.port "...")
 		}
@@ -266,7 +266,7 @@ class GroupUser {
 		GroupUser.ldapConnection.connect()
 		GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
 		if (!GroupUser.options.countOnly
-				&& !GroupUser.options.result_only) {
+				&& !GroupUser.options.resultOnly) {
 			Ansi.writeLine("Ok.")
 			Ansi.writeLine(new GroupUser.Entry(GroupUser
 					.findDnByFilter("cn=" GroupUser.cn), ""
@@ -359,10 +359,10 @@ class GroupUser {
 			GroupUser.options.tempFile.writeLine((
 					!GroupUser.options.output
 					&& !GroupUser.options.append
-					&& !GroupUser.options.result_only
+					&& !GroupUser.options.resultOnly
 					? "   " : "") text)
 		} else if (!GroupUser.options.countOnly) {
-			Ansi.writeLine((!GroupUser.options.result_only
+			Ansi.writeLine((!GroupUser.options.resultOnly
 					? "   " : "") text)
 		}
 	}
