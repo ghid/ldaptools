@@ -337,27 +337,26 @@ class GroupUser {
 	}
 
 	processOutput(entry) {
-		res := true
-		text := entry.toString()
-		try {
-			if (!GroupUser.options.quiet
-					&& res := text.filter(GroupUser.options.filter
-					, GroupUser.options.regex
-					, (GroupUser.options.ignore_case = true ? true : false)
-					, GroupUser.options.invert_match)) {
-				if (GroupUser.options.tempFile) {
-					GroupUser.options.tempFile.writeLine((!GroupUser.options.output
-							&& !GroupUser.options.append
-							&& !GroupUser.options.result_only ? "	" : "") text)
-				} else if (!GroupUser.options.countOnly) {
-					Ansi.writeLine((!GroupUser.options.result_only ? "	 ":"")
-							. text, true)
-				}
-			}
+		if (GroupUser.options.quiet) {
+			return false
 		}
-		catch _ex {
-			OutputDebug % A_ThisFunc ": " _ex.message
-			res := false
+		return GroupUser.filterOutput(entry)
+	}
+
+	filterOutput(entry) {
+		text := entry.toString()
+		if (res := text.filter(GroupUser.options.filter
+				, GroupUser.options.regex
+				, (GroupUser.options.ignore_case = true ? true : false)
+				, GroupUser.options.invert_match)) {
+			if (GroupUser.options.tempFile) {
+				GroupUser.options.tempFile.writeLine((!GroupUser.options.output
+						&& !GroupUser.options.append
+						&& !GroupUser.options.result_only ? "	" : "") text)
+			} else if (!GroupUser.options.countOnly) {
+				Ansi.writeLine((!GroupUser.options.result_only ? "	 ":"")
+						. text, true)
+			}
 		}
 		return res
 	}
