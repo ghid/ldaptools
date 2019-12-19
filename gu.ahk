@@ -36,7 +36,7 @@ class GroupUser {
 				, help: false
 				, host: "localhost"
 				, ibmNestedGroups: false
-				, ignore_case: -1
+				, ignoreCase: -1
 				, invert_match: false
 				, lower: false
 				, max_nested_lv: 32
@@ -113,9 +113,9 @@ class GroupUser {
 				. GroupUser.options.port ")"
 				,, GroupUser.options.port, GroupUser.options.port))
 		op.add(new OptParser.Boolean("i", "ignore-case"
-				, GroupUser.options, "ignore_case"
+				, GroupUser.options, "ignoreCase"
 				, "Ignore case when filtering results", OptParser.OPT_NEG
-				, GroupUser.options.ignore_case, GroupUser.options.ignore_case))
+				, GroupUser.options.ignoreCase, GroupUser.options.ignoreCase))
 		op.add(new OptParser.Boolean("l", "lower"
 				, GroupUser.options, "lower"
 				, "Display result in lower case characters"))
@@ -347,7 +347,7 @@ class GroupUser {
 		text := entry.toString()
 		if (res := entry.handleCase(entry.handleShort(entry.dn))
 				.filter(GroupUser.options.filter, GroupUser.options.regex
-				, (GroupUser.options.ignore_case = true ? true : false)
+				, (GroupUser.options.ignoreCase = true ? true : false)
 				, GroupUser.options.invert_match)) {
 			GroupUser.writeOutput(entry.toString())
 		}
