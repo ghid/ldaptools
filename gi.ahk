@@ -305,7 +305,7 @@ class GroupInfo {
 		entry := GroupInfo.ldapConnection.firstEntry(searchResult)
 		dn := GroupInfo.ldapConnection.getDn(entry)
 		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine(new GroupInfo.Entry(dn, "").dn)
+			Ansi.writeLine(new GroupInfo.Entry(dn, "", GroupInfo.options).dn)
 		}
 		return dn
 	}
@@ -332,7 +332,7 @@ class GroupInfo {
 			numberOfGroups := 0
 			loop % groupsOfCn.count() {
 				if (GroupInfo.processOutput(new GroupInfo
-						.Entry(groupsOfCn[A_Index], ""))) {
+						.Entry(groupsOfCn[A_Index], "", GroupInfo.options))) {
 					numberOfGroups++
 				}
 			}
@@ -354,7 +354,7 @@ class GroupInfo {
 				}
 				if (groupData.groupsOfDn[dn] == "" || GroupInfo.options.refs) {
 					if (GroupInfo.processOutput(new GroupInfo.Entry(dn
-							, memberDn))) {
+							, memberDn, GroupInfo.options))) {
 						groupData.numberOfGroups++
 					}
 					groupData.groupsOfDn[dn] := 1

@@ -1,10 +1,12 @@
 class Entry {
 	theDn := ""
 	theRef := ""
+	options := {}
 
-	__new(theDn, theRef) {
+	__new(theDn, theRef, options) {
 		this.theDn := theDn
 		this.theRef := theRef
+		this.options := options
 		return this
 	}
 
@@ -17,7 +19,7 @@ class Entry {
 
 	ref[] {
 		get {
-			if (GroupInfo.options.refs) {
+			if (this.options.refs) {
 				return this.addSeparator(this.handleColor(this
 						.handleCase(this.handleShort(this.theRef))))
 			}
@@ -26,7 +28,7 @@ class Entry {
 	}
 
 	addSeparator(text) {
-		if (GroupInfo.options.color) {
+		if (this.options.color) {
 			beginSeparator := Ansi.setGraphic(Ansi.FOREGROUND_RED
 					, Ansi.ATTR_BOLD)
 			endSeparator := Ansi.setGraphic(Ansi.ATTR_OFF)
@@ -39,7 +41,7 @@ class Entry {
 	}
 
 	handleShort(text) {
-		if (GroupInfo.options.short) {
+		if (this.options.short) {
 			RegExMatch(text, "^.*?=(.*?)\s*,.*$", $)
 			return $1
 		}
@@ -47,13 +49,13 @@ class Entry {
 	}
 
 	handleCase(text) {
-		return Format("{:" (GroupInfo.options.upper ? "U"
-				: GroupInfo.options.lower ? "L"
+		return Format("{:" (this.options.upper ? "U"
+				: this.options.lower ? "L"
 				: "s") "}", text)
 	}
 
 	handleColor(text) {
-		if (GroupInfo.options.color) {
+		if (this.options.color) {
 			return RegExReplace(text, "(?P<attr>\w+=)"
 					, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
 					. "${attr}"

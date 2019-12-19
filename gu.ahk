@@ -268,8 +268,8 @@ class GroupUser {
 		if (!GroupUser.options.countOnly
 				&& !GroupUser.options.result_only) {
 			Ansi.writeLine("Ok.")
-			Ansi.writeLine(GroupUser.format_output(GroupUser
-					.findDnByFilter("cn=" GroupUser.cn), ""))
+			Ansi.writeLine(new GroupUser.Entry(GroupUser
+					.findDnByFilter("cn=" GroupUser.cn), "", GroupUser.options).dn)
 		}
 	}
 
@@ -312,51 +312,6 @@ class GroupUser {
 		return content
 	}
 
-	format_output(text, ref) {
-		if (GroupUser.options.refs) {
-			if (GroupUser.options.short) {
-				if (RegExMatch(ref, "^.*?=\s*(.*?)\s*,.*$", $)) {
-					ref := $1
-				}
-			}
-		} else {
-			ref := ""
-		}
-		if (GroupUser.options.short) {
-			if (RegExMatch(text, "^.*?=\s*(.*?)\s*,.*$", $)) {
-				text := $1	
-			}
-		}
-		if (GroupUser.options.upper) {
-			text := text.upper()
-			ref := ref.upper()
-		} else if (GroupUser.options.lower) {
-			text := text.lower()
-			ref := ref.lower()
-		}
-		if (GroupUser.options.color) {
-			text := RegExReplace(text, "(?P<attr>\w+=)"
-					, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-					. "${attr}"
-					. Ansi.setGraphic(Ansi.ATTR_OFF))
-			if (GroupUser.options.refs && ref != "") {
-				ref := Ansi.setGraphic(Ansi.FOREGROUND_RED, Ansi.ATTR_BOLD)
-						. "  <-(" RegExReplace(ref, "(?P<attr>\w+=)"
-						, Ansi.setGraphic(Ansi.FOREGROUND_GREEN, Ansi.ATTR_BOLD)
-						. "${attr}"
-						. Ansi.setGraphic(Ansi.ATTR_OFF))
-						. Ansi.setGraphic(Ansi.FOREGROUND_RED
-						, Ansi.ATTR_BOLD) ")"
-						. Ansi.setGraphic(Ansi.ATTR_OFF)
-			}
-		} else {
-			if (GroupUser.options.refs) {
-				ref := "  <-(" ref ")"
-			}
-		}
-		return text ref
-	}
-
 	findDnByFilter(ldapFilter) {
 		if (!GroupUser.ldapConnection.search(searchResult, GroupUser.options.baseDn, ldapFilter)
 				== Ldap.LDAP_SUCCESS) {
@@ -378,8 +333,9 @@ class GroupUser {
 		return GroupUser.ldapConnection.getDn(entry)
 	}
 
-	processOutput(text) {
+	processOutput(entry) {
 		res := true
+		text := entry.toString()
 		try {
 			if (!GroupUser.options.quiet
 					&& res := text.filter(GroupUser.options.filter
@@ -461,11 +417,12 @@ class GroupUser {
 					memberData.nestedLevel--
 				} else {
 					if (memberData.memberList[memberDn] = "") {
-						if (GroupUser.processOutput(GroupUser.format_output(memberDn
+						if (GroupUser.processOutput(new GroupUser.Entry(memberDn
 								, (GroupUser.options.short
 								|| !GroupUser.options.refs
-								? groupCn
-								: GroupUser.findDnByFilter("cn=" groupCn))))) {
+								? "cn=" groupCn ","
+								: GroupUser.findDnByFilter("cn=" groupCn))
+								, GroupUser.options))) {
 							memberData.numberOfMembers++
 						}
 						memberData.memberList[memberDn] := 1
