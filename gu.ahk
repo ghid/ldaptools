@@ -39,7 +39,7 @@ class GroupUser {
 				, ignoreCase: -1
 				, invertMatch: false
 				, lower: false
-				, max_nested_lv: 32
+				, maxNestedLevel: 32
 				, output: ""
 				, port: 389
 				, quiet: false
@@ -144,11 +144,11 @@ class GroupUser {
 				, "Only chase groups which implement "
 				. "objectclass ibm-nestedGroup"))
 		op.add(new OptParser.String(0, "max-nested-level"
-				, GroupUser.options, "max_nested_lv", "n"
+				, GroupUser.options, "maxNestedLevel", "n"
 				, "Defines, which recursion depth terminates the process "
 				. "(default=32)"
-				,, GroupUser.options.max_nested_lv
-				, GroupUser.options.max_nested_lv))
+				,, GroupUser.options.maxNestedLevel
+				, GroupUser.options.maxNestedLevel))
 		op.add(new OptParser.Boolean(0, "env"
 				, GroupUser.options, "env_dummy"
 				, "Ignore environment variable GU_OPTIONS"
@@ -416,7 +416,7 @@ class GroupUser {
 				if (GroupUser.isCnAGroup(cn)) {
 					memberData.nestedLevel++
 					if (memberData.nestedLevel
-							> GroupUser.options.max_nested_lv) {
+							> GroupUser.options.maxNestedLevel) {
 						throw Exception("error: "
 								. "Cyclic reference detected: `n`t" memberDn "`n`t<- " groupCn ; ahklint-ignore: W002
 								,, GroupUser.RC_CYCLE_DETECTED)
