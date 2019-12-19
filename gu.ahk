@@ -269,7 +269,8 @@ class GroupUser {
 				&& !GroupUser.options.result_only) {
 			Ansi.writeLine("Ok.")
 			Ansi.writeLine(new GroupUser.Entry(GroupUser
-					.findDnByFilter("cn=" GroupUser.cn), "", GroupUser.options).dn)
+					.findDnByFilter("cn=" GroupUser.cn), ""
+					, GroupUser.options).dn)
 		}
 	}
 
@@ -418,9 +419,7 @@ class GroupUser {
 				} else {
 					if (memberData.memberList[memberDn] = "") {
 						if (GroupUser.processOutput(new GroupUser.Entry(memberDn
-								, (GroupUser.options.short
-								|| !GroupUser.options.refs
-								? "cn=" groupCn ","
+								, (GroupUser.options.short ? groupCn
 								: GroupUser.findDnByFilter("cn=" groupCn))
 								, GroupUser.options))) {
 							memberData.numberOfMembers++

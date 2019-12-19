@@ -41,8 +41,7 @@ class Entry {
 	}
 
 	handleShort(text) {
-		if (this.options.short) {
-			RegExMatch(text, "^.*?=(.*?)\s*,.*$", $)
+		if (this.options.short && RegExMatch(text, "^.*?=(.*?)\s*,.*$", $)) {
 			return $1
 		}
 		return text
