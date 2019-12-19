@@ -1,10 +1,10 @@
 Connecting to localhost:10389...
 Ok.
 [32;1mcn=[0mPeanuts,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom
-	 [32;1mcn=[0mPeppermint Patty,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mSome Others,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mCharlie Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mSally Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mSnoopy,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's Pets,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mWoodstock,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's Pets,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mLinus van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe van Pelt's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
-	 [32;1mcn=[0mLucy van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe van Pelt's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mPeppermint Patty,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mSome Others,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mCharlie Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mSally Brown,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mSnoopy,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's Pets,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mWoodstock,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe Brown's Pets,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mLinus van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe van Pelt's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m
+   [32;1mcn=[0mLucy van Pelt,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m  <-([32;1mcn=[0mThe van Pelt's,[32;1mou=[0mgroups,[32;1mdc=[0mexample,[32;1mdc=[0mcom[31;1m)[0m

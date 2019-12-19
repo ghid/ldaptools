@@ -1,10 +1,10 @@
 Connecting to localhost:10389...
 Ok.
 Peanuts
-	 Peppermint Patty[31;1m  <-(Some Others[31;1m)[0m
-	 Charlie Brown[31;1m  <-(The Brown's[31;1m)[0m
-	 Sally Brown[31;1m  <-(The Brown's[31;1m)[0m
-	 Snoopy[31;1m  <-(The Brown's Pets[31;1m)[0m
-	 Woodstock[31;1m  <-(The Brown's Pets[31;1m)[0m
-	 Linus van Pelt[31;1m  <-(The van Pelt's[31;1m)[0m
-	 Lucy van Pelt[31;1m  <-(The van Pelt's[31;1m)[0m
+   Peppermint Patty[31;1m  <-(Some Others[31;1m)[0m
+   Charlie Brown[31;1m  <-(The Brown's[31;1m)[0m
+   Sally Brown[31;1m  <-(The Brown's[31;1m)[0m
+   Snoopy[31;1m  <-(The Brown's Pets[31;1m)[0m
+   Woodstock[31;1m  <-(The Brown's Pets[31;1m)[0m
+   Linus van Pelt[31;1m  <-(The van Pelt's[31;1m)[0m
+   Lucy van Pelt[31;1m  <-(The van Pelt's[31;1m)[0m

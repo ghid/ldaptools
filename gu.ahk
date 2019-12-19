@@ -345,20 +345,26 @@ class GroupUser {
 
 	filterOutput(entry) {
 		text := entry.toString()
-		if (res := text.filter(GroupUser.options.filter
-				, GroupUser.options.regex
+		if (res := entry.handleCase(entry.handleShort(entry.dn))
+				.filter(GroupUser.options.filter, GroupUser.options.regex
 				, (GroupUser.options.ignore_case = true ? true : false)
 				, GroupUser.options.invert_match)) {
-			if (GroupUser.options.tempFile) {
-				GroupUser.options.tempFile.writeLine((!GroupUser.options.output
-						&& !GroupUser.options.append
-						&& !GroupUser.options.result_only ? "	" : "") text)
-			} else if (!GroupUser.options.countOnly) {
-				Ansi.writeLine((!GroupUser.options.result_only ? "	 ":"")
-						. text, true)
-			}
+			GroupUser.writeOutput(entry.toString())
 		}
 		return res
+	}
+
+	writeOutput(text) {
+		if (GroupUser.options.tempFile) {
+			GroupUser.options.tempFile.writeLine((
+					!GroupUser.options.output
+					&& !GroupUser.options.append
+					&& !GroupUser.options.result_only
+					? "   " : "") text)
+		} else if (!GroupUser.options.countOnly) {
+			Ansi.writeLine((!GroupUser.options.result_only
+					? "   " : "") text)
+		}
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
