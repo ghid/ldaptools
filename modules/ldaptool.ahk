@@ -88,4 +88,11 @@ class LdapTool {
 					. ":" this.options.port " ... ")
 		}
 	}
+
+	handleHitCount(numberOfHits) {
+		if (this.options.count) {
+			Ansi.writeLine("`n" numberOfHits " Hit(s)")
+		}
+		return numberOfHits
+	}
 }

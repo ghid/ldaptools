@@ -159,13 +159,6 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	handleHitCount(numberOfHits) {
-		if (GroupInfo.options.count) {
-			Ansi.writeLine("`n" numberOfHits " Hit(s)")
-		}
-		return numberOfHits
-	}
-
 	doCleanup() {
 		if (GroupInfo.ldapConnection) {
 			GroupInfo.ldapConnection.unbind()

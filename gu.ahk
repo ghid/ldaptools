@@ -136,13 +136,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	handleHitCount(numberOfHits) {
-		if (GroupUser.options.count) {
-			Ansi.writeLine("`n" numberOfHits " Hit(s)")
-		}
-		return numberOfHits
-	}
-
 	doCleanup() {
 		if (GroupUser.ldapConnection) {
 			GroupUser.ldapConnection.unbind()
