@@ -220,16 +220,6 @@ class GroupUser extends LdapTool {
 		return memberData.numberOfMembers
 	}
 
-	checkNumberOfEntries(searchResult) {
-		numberOfEntriesFound
-				:= GroupUser.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw Exception("error: "
-					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
-		}
-		return numberOfEntriesFound
-	}
-
 	getCnOfMemberDn(memberDn) {
 		RegExMatch(memberDn, "i)cn=(.+?)\s*(,.*$|$)", $)
 		return $1

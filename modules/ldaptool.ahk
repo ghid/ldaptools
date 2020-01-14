@@ -175,6 +175,16 @@ class LdapTool {
 		}
 	}
 
+	checkNumberOfEntries(searchResult) {
+		numberOfEntriesFound
+				:= this.ldapConnection.countEntries(searchResult)
+		if (numberOfEntriesFound < 0) {
+			throw Exception("error: "
+					. Ldap.err2String(this.ldapConnection.getLastError()))
+		}
+		return numberOfEntriesFound
+	}
+
 	doCleanup() {
 		if (this.ldapConnection) {
 			this.ldapConnection.unbind()

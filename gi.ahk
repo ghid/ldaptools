@@ -269,16 +269,6 @@ class GroupInfo extends LdapTool {
 		return GroupInfo.checkNumberOfEntries(searchResult)
 	}
 
-	checkNumberOfEntries(searchResult) {
-		numberOfEntriesFound
-				:= GroupInfo.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw "error: " Exception(Ldap.err2String(GroupInfo
-					.ldapConnection.getLastError()))
-		}
-		return numberOfEntriesFound
-	}
-
 	processOutput(entry) {
 		if (!GroupInfo.options.quiet) {
 			try {
