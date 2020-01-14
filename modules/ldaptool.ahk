@@ -44,4 +44,13 @@ class LdapTool {
 		return this.options.help || this.options.version
 	}
 
+	showHelpOrVersionInfo(optionParser) {
+		if (this.options.help) {
+			Ansi.writeLine(optionParser.usage())
+		} else if (this.options.version) {
+			Ansi.writeLine(G_VERSION_INFO.NAME "/"
+					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
+		}
+		return ""
+	}
 }

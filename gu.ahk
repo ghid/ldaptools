@@ -130,16 +130,6 @@ class GroupUser extends LdapTool {
 		return op
 	}
 
-	showHelpOrVersionInfo(optionParser) {
-		if (GroupUser.options.help) {
-			Ansi.writeLine(optionParser.usage())
-		} else if (GroupUser.options.version) {
-			Ansi.writeLine(G_VERSION_INFO.NAME "/"
-					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
-		}
-		return ""
-	}
-
 	evaluateCommandLineOptions(args) {
 		if (args.count() < 1) {
 			throw Exception("error: Missing argument"

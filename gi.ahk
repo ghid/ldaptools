@@ -123,16 +123,6 @@ class GroupInfo extends LdapTool {
 		return op
 	}
 
-	showHelpOrVersionInfo(optionParser) {
-		if (GroupInfo.options.help) {
-			Ansi.writeLine(optionParser.usage())
-		} else if (GroupInfo.options.version) {
-			Ansi.writeLine(G_VERSION_INFO.NAME "/"
-					. G_VERSION_INFO.ARCH "-b" G_VERSION_INFO.BUILD)
-		}
-		return ""
-	}
-
 	evaluateCommandLineOptions(parsedArguments) {
 		if (parsedArguments.count() < 1) {
 			throw Exception("error: Missing argument"
