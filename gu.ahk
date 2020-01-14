@@ -23,27 +23,27 @@ class GroupUser extends LdapTool {
 
 	run(commandLineArguments) {
 		try {
-			rc := GroupUser.RC_OK
+			returnCode := GroupUser.RC_OK
 			op := GroupUser.cli()
 			parsedArguments := op.parse(commandLineArguments)
 			if (GroupUser.shallHelpOrVersionInfoBeDisplayed()) {
-				rc := GroupUser.showHelpOrVersionInfo(op)
+				returnCode := GroupUser.showHelpOrVersionInfo(op)
 			} else {
 				GroupUser.evaluateCommandLineOptions(parsedArguments)
 				GroupUser.handleIBMnestedGroups()
 				GroupUser.handleParsedArguments(parsedArguments)
 				GroupUser.handleCountOnly()
-				rc := GroupUser.handleHitCount(GroupUser.main())
+				returnCode := GroupUser.handleHitCount(GroupUser.main())
 			}
 		} catch e {
 			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
 			Ansi.writeLine(e.message)
 			Ansi.writeLine(op.usage())
-			rc := e.Extra
+			returnCode := e.Extra
 		} finally {
 			GroupUser.doCleanup()
 		}
-		return rc
+		return returnCode
 	}
 
 	cli() {
