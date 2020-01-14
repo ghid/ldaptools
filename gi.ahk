@@ -123,10 +123,6 @@ class GroupInfo extends LdapTool {
 		return op
 	}
 
-	shallHelpOrVersionInfoBeDisplayed() {
-		return GroupInfo.options.help || GroupInfo.options.version
-	}
-
 	showHelpOrVersionInfo(optionParser) {
 		if (GroupInfo.options.help) {
 			Ansi.writeLine(optionParser.usage())

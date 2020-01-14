@@ -39,4 +39,9 @@ class LdapTool {
 				, upper: false
 				, version: false }
 	}
+
+	shallHelpOrVersionInfoBeDisplayed() {
+		return this.options.help || this.options.version
+	}
+
 }

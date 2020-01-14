@@ -130,10 +130,6 @@ class GroupUser extends LdapTool {
 		return op
 	}
 
-	shallHelpOrVersionInfoBeDisplayed() {
-		return GroupUser.options.help || GroupUser.options.version
-	}
-
 	showHelpOrVersionInfo(optionParser) {
 		if (GroupUser.options.help) {
 			Ansi.writeLine(optionParser.usage())
