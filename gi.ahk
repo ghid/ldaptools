@@ -327,19 +327,6 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	readContentFromTempFileAndDeleteIt() {
-		content := ""
-		GroupInfo.options.tempFile.close()
-		tempFile := FileOpen(A_Temp "\__gi__.dat", "r`n")
-		content := tempFile.read(tempFile.length)
-		tempFile.close()
-		if (GroupInfo.options.sort) {
-			Sort content
-		}
-		FileDelete %A_Temp%\__gi__.dat
-		return content
-	}
-
 	class GroupData {
 		searchResult := 0
 		numberOfGroups := 0

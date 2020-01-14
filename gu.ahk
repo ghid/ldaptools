@@ -151,19 +151,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	readContentFromTempFileAndDeleteIt() {
-		content := ""
-		GroupUser.options.tempFile.close()
-		tempFile := FileOpen(A_Temp "\__gu__.dat", "r`n")
-		content := tempFile.read(tempFile.Length)
-		tempFile.close()
-		if (GroupUser.options.sort) {
-			Sort content
-		}
-		FileDelete %A_Temp%\__gu__.dat
-		return content
-	}
-
 	findDnByFilter(ldapFilter) {
 		if (!GroupUser.ldapConnection.search(searchResult
 				, GroupUser.options.baseDn, ldapFilter)

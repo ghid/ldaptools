@@ -145,6 +145,19 @@ class LdapTool {
 		}
 	}
 
+	readContentFromTempFileAndDeleteIt() {
+		content := ""
+		this.options.tempFile.close()
+		tempFile := FileOpen(this.tempFileName, "r`n")
+		content := tempFile.read(tempFile.length)
+		tempFile.close()
+		if (this.options.sort) {
+			Sort content
+		}
+		FileDelete % this.tempFileName
+		return content
+	}
+
 	tempFileWasNecessary() {
 		return IsObject(this.options.tempFile)
 	}
