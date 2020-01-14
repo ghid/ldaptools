@@ -82,6 +82,12 @@ class LdapTool {
 		}
 	}
 
+	handleIBMnestedGroups() {
+		if (this.options.ibmNestedGroups) {
+			this.options.filterObjectClass := "ibm-nestedGroup"
+		}
+	}
+
 	handleCountOnly() {
 		if (!this.options.countOnly && !this.options.resultOnly) {
 			Ansi.write("`nConnecting to " this.options.host
@@ -94,5 +100,23 @@ class LdapTool {
 			Ansi.writeLine("`n" numberOfHits " Hit(s)")
 		}
 		return numberOfHits
+	}
+
+	connectToLdapServer() {
+		this.ldapConnection := new Ldap(this.options.host, this.options.port)
+		this.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
+		this.ldapConnection.connect()
+		if (!this.options.countOnly && !this.options.resultOnly) {
+			Ansi.writeLine("Ok.")
+		}
+	}
+
+	doCleanup() {
+		if (this.ldapConnection) {
+			this.ldapConnection.unbind()
+		}
+		if (this.options.tempFile) {
+			this.options.tempFile.close()
+		}
 	}
 }

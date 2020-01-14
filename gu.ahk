@@ -130,24 +130,10 @@ class GroupUser extends LdapTool {
 		return op
 	}
 
-	handleIBMnestedGroups() {
-		if (GroupUser.options.ibmNestedGroups) {
-			GroupUser.options.filterObjectClass := "ibm-nestedGroup"
-		}
-	}
-
-	doCleanup() {
-		if (GroupUser.ldapConnection) {
-			GroupUser.ldapConnection.unbind()
-		}
-		if (GroupUser.options.tempFile) {
-			GroupUser.options.tempFile.close()
-		}
-	}
-
 	main() {
 		GroupUser.openTempFileIfNecessary()
 		GroupUser.connectToLdapServer()
+		GroupUser.printDn()
 		numberOfHits := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
 				, new GroupUser.MemberData())
 		if (GroupUser.tempFileWasNecessary()) {
@@ -168,14 +154,8 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	connectToLdapServer() {
-		GroupUser.ldapConnection := new Ldap(GroupUser.options.host
-				, GroupUser.options.port)
-		GroupUser.ldapConnection.connect()
-		GroupUser.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-		if (!GroupUser.options.countOnly
-				&& !GroupUser.options.resultOnly) {
-			Ansi.writeLine("Ok.")
+	printDn() {
+		if (!GroupUser.options.countOnly && !GroupUser.options.resultOnly) {
 			Ansi.writeLine(new GroupUser.Entry(GroupUser
 					.findDnByFilter("cn=" GroupUser.cn), ""
 					, GroupUser.options).dn)

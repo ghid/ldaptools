@@ -147,24 +147,9 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	handleIBMnestedGroups() {
-		if (GroupInfo.options.ibmNestedGroups) {
-			GroupInfo.options.filterObjectClass := "ibm-nestedGroup"
-		}
-	}
-
 	handleRegExFilter() {
 		if (GroupInfo.options.regex) {
 			GroupInfo.options.filter := "(.*)"
-		}
-	}
-
-	doCleanup() {
-		if (GroupInfo.ldapConnection) {
-			GroupInfo.ldapConnection.unbind()
-		}
-		if (GroupInfo.options.tempFile) {
-			GroupInfo.options.tempFile.close()
 		}
 	}
 
@@ -180,16 +165,6 @@ class GroupInfo extends LdapTool {
 			GroupInfo.distributeTempFileContent()
 		}
 		return numberOfHits
-	}
-
-	connectToLdapServer() {
-		GroupInfo.ldapConnection := new Ldap(GroupInfo.options.host
-				, GroupInfo.options.port)
-		GroupInfo.ldapConnection.setOption(Ldap.OPT_VERSION, Ldap.VERSION3)
-		GroupInfo.ldapConnection.connect()
-		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine("Ok.")
-		}
 	}
 
 	findDnByFilter(ldapFilter) {
