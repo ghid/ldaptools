@@ -11,9 +11,7 @@ class GroupUser extends LdapTool {
 
 	static options := {}
 
-	static out_file := ""
 	static cn := ""
-	static dn := ""
 	static tempFileName := A_Temp "\__gu__.dat"
 
 	setDefaults() {
