@@ -1,5 +1,5 @@
-Connecting to localhost:10389...
-Ok.
+
+Connecting to localhost:10389 ... Ok.
 Peanuts
    Charlie Brown[31;1m  <-(The Brown's[31;1m)[0m
    Sally Brown[31;1m  <-(The Brown's[31;1m)[0m

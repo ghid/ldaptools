@@ -136,14 +136,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	handleCountOnly() {
-		if (!GroupUser.options.countOnly
-				&& !GroupUser.options.resultOnly) {
-			Ansi.writeLine("Connecting to " GroupUser.options.host
-					. ":" GroupUser.options.port "...")
-		}
-	}
-
 	handleHitCount(numberOfHits) {
 		if (GroupUser.options.count) {
 			Ansi.writeLine("`n" numberOfHits " Hit(s)")

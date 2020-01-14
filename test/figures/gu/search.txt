@@ -1,5 +1,5 @@
-Connecting to localhost:10389...
-Ok.
+
+Connecting to localhost:10389 ... Ok.
 Peanuts
    Peppermint Patty[31;1m  <-(Some Others[31;1m)[0m
    Snoopy[31;1m  <-(The Brown's Pets[31;1m)[0m

@@ -82,4 +82,10 @@ class LdapTool {
 		}
 	}
 
+	handleCountOnly() {
+		if (!this.options.countOnly && !this.options.resultOnly) {
+			Ansi.write("`nConnecting to " this.options.host
+					. ":" this.options.port " ... ")
+		}
+	}
 }

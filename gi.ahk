@@ -159,14 +159,6 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	handleCountOnly() {
-		if (!GroupInfo.options.countOnly
-				&& !GroupInfo.options.resultOnly) {
-			Ansi.write("`nConnecting to " GroupInfo.options.host
-					. ":" GroupInfo.options.port " ... ")
-		}
-	}
-
 	handleHitCount(numberOfHits) {
 		if (GroupInfo.options.count) {
 			Ansi.writeLine("`n" numberOfHits " Hit(s)")

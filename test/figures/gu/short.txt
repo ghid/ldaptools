@@ -1,5 +1,5 @@
-Connecting to localhost:10389...
-Ok.
+
+Connecting to localhost:10389 ... Ok.
 Peanuts
    Peppermint Patty
    Charlie Brown
