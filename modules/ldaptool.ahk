@@ -111,6 +111,14 @@ class LdapTool {
 		}
 	}
 
+	printDn() {
+		dn := this.findDnByFilter("cn=" this.cn)
+		if (!this.options.countOnly && !this.options.resultOnly) {
+			Ansi.writeLine(new this.Entry(dn, "", this.options).dn)
+		}
+		return dn
+	}
+
 	findDnByFilter(ldapFilter) {
 		if (this.ldapConnection.search(searchResult
 				, this.options.baseDn, ldapFilter)

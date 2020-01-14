@@ -143,14 +143,6 @@ class GroupUser extends LdapTool {
 		return numberOfHits
 	}
 
-	printDn() {
-		if (!GroupUser.options.countOnly && !GroupUser.options.resultOnly) {
-			Ansi.writeLine(new GroupUser.Entry(GroupUser
-					.findDnByFilter("cn=" GroupUser.cn), ""
-					, GroupUser.options).dn)
-		}
-	}
-
 	processOutput(entry) {
 		if (GroupUser.options.quiet) {
 			return false

@@ -168,15 +168,6 @@ class GroupInfo extends LdapTool {
 		return numberOfHits
 	}
 
-	printDn() {
-		dn := GroupInfo.findDnByFilter("cn=" GroupInfo.cn)
-		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine(new GroupInfo.Entry(dn, ""
-					, GroupInfo.options).dn)
-		}
-		return dn
-	}
-
 	groupsOfCnByUsingIbmAllGroups(cn) {
 		numberOfGroups := 0
 		groupsOfCn := []
