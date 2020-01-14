@@ -192,19 +192,6 @@ class GroupUser extends LdapTool {
 		return res
 	}
 
-	writeOutput(text) {
-		if (GroupUser.options.tempFile) {
-			GroupUser.options.tempFile.writeLine((
-					!GroupUser.options.output
-					&& !GroupUser.options.append
-					&& !GroupUser.options.resultOnly
-					? "   " : "") text)
-		} else if (!GroupUser.options.countOnly) {
-			Ansi.writeLine((!GroupUser.options.resultOnly
-					? "   " : "") text)
-		}
-	}
-
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
 		ldapFilter := Format("(&(objectclass={:s})(cn={:s}))"
 				, GroupUser.options.filterObjectClass, groupCn)

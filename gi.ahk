@@ -313,20 +313,6 @@ class GroupInfo extends LdapTool {
 		return dn
 	}
 
-	writeOutput(text) {
-		if (GroupInfo.options.tempFile) {
-			GroupInfo.options.tempFile.writeLine(((
-					!GroupInfo.options.output
-					&& !GroupInfo.options.append
-					&& !GroupInfo.options.resultOnly)
-					? "   " : "") text)
-		} else if (!GroupInfo.options.countOnly) {
-			Ansi.writeLine((!GroupInfo.options.resultOnly
-					? "   "
-					: "") text)
-		}
-	}
-
 	class GroupData {
 		searchResult := 0
 		numberOfGroups := 0

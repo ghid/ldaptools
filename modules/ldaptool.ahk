@@ -162,6 +162,19 @@ class LdapTool {
 		return IsObject(this.options.tempFile)
 	}
 
+	writeOutput(text) {
+		if (this.options.tempFile) {
+			this.options.tempFile.writeLine((
+					!this.options.output
+					&& !this.options.append
+					&& !this.options.resultOnly
+					? "   " : "") text)
+		} else if (!this.options.countOnly) {
+			Ansi.writeLine((!this.options.resultOnly
+					? "   " : "") text)
+		}
+	}
+
 	doCleanup() {
 		if (this.ldapConnection) {
 			this.ldapConnection.unbind()
