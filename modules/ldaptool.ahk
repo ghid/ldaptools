@@ -136,6 +136,15 @@ class LdapTool {
 		this.writeTempFileContent(fileName)
 	}
 
+	writeTempFileContent(fileName) {
+		content := this.readContentFromTempFileAndDeleteIt()
+		if (fileName = "*") {
+			Ansi.write(content)
+		} else {
+			FileAppend %content%, %fileName%
+		}
+	}
+
 	tempFileWasNecessary() {
 		return IsObject(this.options.tempFile)
 	}

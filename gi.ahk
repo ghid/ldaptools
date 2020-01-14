@@ -340,15 +340,6 @@ class GroupInfo extends LdapTool {
 		return content
 	}
 
-	writeTempFileContent(fileName) {
-		content := GroupInfo.readContentFromTempFileAndDeleteIt()
-		if (fileName = "*") {
-			Ansi.write(content)
-		} else {
-			FileAppend %content%, %fileName%
-		}
-	}
-
 	class GroupData {
 		searchResult := 0
 		numberOfGroups := 0
