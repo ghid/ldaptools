@@ -151,19 +151,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	distributeTempFileContent() {
-		fileName := "*"
-		if (GroupUser.options.append) {
-			fileName := GroupUser.options.append
-		} else if (GroupUser.options.output) {
-			fileName := GroupUser.options.output
-			if (FileExist(fileName)) {
-				FileDelete %fileName%
-			}
-		}
-		GroupUser.writeTempFileContent(fileName)
-	}
-
 	writeTempFileContent(fileName) {
 		content := GroupUser.readContentFromTempFileAndDeleteIt()
 		if (fileName = "*") {

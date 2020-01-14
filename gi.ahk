@@ -340,19 +340,6 @@ class GroupInfo extends LdapTool {
 		return content
 	}
 
-	distributeTempFileContent() {
-		fileName := "*"
-		if (GroupInfo.options.append) {
-			fileName := GroupInfo.options.append
-		} else if (GroupInfo.options.output) {
-			fileName := GroupInfo.options.output
-			if (FileExist(fileName)) {
-				FileDelete %fileName%
-			}
-		}
-		GroupInfo.writeTempFileContent(fileName)
-	}
-
 	writeTempFileContent(fileName) {
 		content := GroupInfo.readContentFromTempFileAndDeleteIt()
 		if (fileName = "*") {

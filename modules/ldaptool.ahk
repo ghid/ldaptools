@@ -123,6 +123,19 @@ class LdapTool {
 		}
 	}
 
+	distributeTempFileContent() {
+		fileName := "*"
+		if (this.options.append) {
+			fileName := this.options.append
+		} else if (this.options.output) {
+			fileName := this.options.output
+			if (FileExist(fileName)) {
+				FileDelete %fileName%
+			}
+		}
+		this.writeTempFileContent(fileName)
+	}
+
 	tempFileWasNecessary() {
 		return IsObject(this.options.tempFile)
 	}
