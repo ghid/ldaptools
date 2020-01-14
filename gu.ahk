@@ -151,29 +151,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	findDnByFilter(ldapFilter) {
-		if (!GroupUser.ldapConnection.search(searchResult
-				, GroupUser.options.baseDn, ldapFilter)
-				== Ldap.LDAP_SUCCESS) {
-			throw Exception("error: "
-					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
-		}
-		if ((numberOfEntries
-				:= GroupUser.ldapConnection.countEntries(searchResult)) < 0) {
-			throw Exception("error: "
-					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
-		}
-		if (numberOfEntries = 0) {
-			throw Exception("error: cn not found """ ldapFilter """"
-					,, GroupUser.RC_CN_NOT_FOUND)
-		} else if (numberOfEntries > 1) {
-			throw Exception("error: cn is ambigous (" numberOfEntries ") """
-					. ldapFilter """",, GroupUser.RC_CN_AMBIGOUS)
-		}
-		entry := GroupUser.ldapConnection.firstEntry(searchResult)
-		return GroupUser.ldapConnection.getDn(entry)
-	}
-
 	processOutput(entry) {
 		if (GroupUser.options.quiet) {
 			return false

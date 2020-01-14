@@ -157,7 +157,7 @@ class GroupInfo extends LdapTool {
 	main() {
 		GroupInfo.openTempFileIfNecessary()
 		GroupInfo.connectToLdapServer()
-		dn := GroupInfo.findDnByFilter("(cn=" GroupInfo.cn ")")
+		dn := GroupInfo.printDn()
 		numberOfHits := (GroupInfo.options.ibmAllGroups
 				? GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
 				: GroupInfo.groupsInWhichDnIsMember(dn
@@ -168,30 +168,11 @@ class GroupInfo extends LdapTool {
 		return numberOfHits
 	}
 
-	findDnByFilter(ldapFilter) {
-		if (GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.baseDn
-				, ldapFilter) != Ldap.LDAP_SUCCESS) {
-			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
-					.getLastError()))
-		}
-		numberOfEntriesFound
-				:= GroupInfo.ldapConnection.countEntries(searchResult)
-		if (numberOfEntriesFound < 0) {
-			throw "error: " Exception(Ldap.err2String(GroupInfo
-					.ldapConnection.getLastError()))
-		}
-		if (numberOfEntriesFound = 0) {
-			throw Exception("error: cn not found """ ldapFilter """"
-					,, RC_CN_NOT_FOUND)
-		} else if (numberOfEntriesFound > 1) {
-			throw Exception("error: cn is ambigous (" numberOfEntriesFound ") "
-					. """" ldapFilter """",, RC_CN_AMBIGOUS)
-		}
-		entry := GroupInfo.ldapConnection.firstEntry(searchResult)
-		dn := GroupInfo.ldapConnection.getDn(entry)
+	printDn() {
+		dn := GroupInfo.findDnByFilter("cn=" GroupInfo.cn)
 		if (!GroupInfo.options.countOnly && !GroupInfo.options.resultOnly) {
-			Ansi.writeLine(new GroupInfo.Entry(dn, "", GroupInfo.options).dn)
+			Ansi.writeLine(new GroupInfo.Entry(dn, ""
+					, GroupInfo.options).dn)
 		}
 		return dn
 	}

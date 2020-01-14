@@ -111,6 +111,29 @@ class LdapTool {
 		}
 	}
 
+	findDnByFilter(ldapFilter) {
+		if (this.ldapConnection.search(searchResult
+				, this.options.baseDn, ldapFilter)
+				!= Ldap.LDAP_SUCCESS) {
+			throw Exception("error: "
+					. Ldap.err2String(this.ldapConnection.getLastError()))
+		}
+		if ((numberOfEntries
+				:= this.ldapConnection.countEntries(searchResult)) < 0) {
+			throw Exception("error: "
+					. Ldap.err2String(this.ldapConnection.getLastError()))
+		}
+		if (numberOfEntries = 0) {
+			throw Exception("error: cn not found """ ldapFilter """"
+					,, this.RC_CN_NOT_FOUND)
+		} else if (numberOfEntries > 1) {
+			throw Exception("error: cn is ambigous (" numberOfEntries ") """
+					. ldapFilter """",, this.RC_CN_AMBIGOUS)
+		}
+		entry := this.ldapConnection.firstEntry(searchResult)
+		return this.ldapConnection.getDn(entry)
+	}
+
 	openTempFileIfNecessary() {
 		if (this.options.sort
 				|| this.options.output
