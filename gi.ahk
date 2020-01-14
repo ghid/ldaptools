@@ -13,6 +13,7 @@ class GroupInfo extends LdapTool {
 
 	static cn := ""
 	static capturedRegExGroups := []
+	static tempFileName := A_Temp "\__gi__.dat"
 
 	setDefaults() {
 		return Object.append(base.options.clone()
@@ -337,18 +338,6 @@ class GroupInfo extends LdapTool {
 		}
 		FileDelete %A_Temp%\__gi__.dat
 		return content
-	}
-
-	openTempFileIfNecessary() {
-		if (GroupInfo.options.sort
-				|| GroupInfo.options.output
-				|| GroupInfo.options.append) {
-			if ((GroupInfo.options.output || GroupInfo.options.append)
-					&& GroupInfo.options.color != true) {
-				GroupInfo.options.color := false
-			}
-			GroupInfo.options.tempFile := FileOpen(A_Temp "\__gi__.dat", "w`n")
-		}
 	}
 
 	distributeTempFileContent() {

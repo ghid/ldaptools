@@ -14,6 +14,7 @@ class GroupUser extends LdapTool {
 	static out_file := ""
 	static cn := ""
 	static dn := ""
+	static tempFileName := A_Temp "\__gu__.dat"
 
 	setDefaults() {
 		return Object.append(base.options.clone()
@@ -140,18 +141,6 @@ class GroupUser extends LdapTool {
 			GroupUser.distributeTempFileContent()
 		}
 		return numberOfHits
-	}
-
-	openTempFileIfNecessary() {
-		if (GroupUser.options.sort
-				|| GroupUser.options.output
-				|| GroupUser.options.append) {
-			if ((GroupUser.options.output || GroupUser.options.append)
-					&& GroupUser.options.color != true) {
-				GroupUser.options.color := false
-			}
-			GroupUser.options.tempFile := FileOpen(A_Temp "\__gu__.dat", "w`n")
-		}
 	}
 
 	printDn() {

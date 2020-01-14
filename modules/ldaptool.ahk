@@ -111,6 +111,18 @@ class LdapTool {
 		}
 	}
 
+	openTempFileIfNecessary() {
+		if (this.options.sort
+				|| this.options.output
+				|| this.options.append) {
+			if ((this.options.output || this.options.append)
+					&& this.options.color != true) {
+				this.options.color := false
+			}
+			this.options.tempFile := FileOpen(this.tempFileName, "w`n")
+		}
+	}
+
 	tempFileWasNecessary() {
 		return IsObject(this.options.tempFile)
 	}
