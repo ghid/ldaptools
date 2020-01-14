@@ -35,11 +35,12 @@ class GroupUser extends LdapTool {
 				GroupUser.handleCountOnly()
 				returnCode := GroupUser.handleHitCount(GroupUser.main())
 			}
-		} catch e {
-			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
-			Ansi.writeLine(e.message)
+		} catch gotException {
+			OutputDebug % gotException.what
+					. "`nin: " gotException.file " #" gotException.line
+			Ansi.writeLine(gotException.message)
 			Ansi.writeLine(optionParser.usage())
-			returnCode := e.Extra
+			returnCode := gotException.Extra
 		} finally {
 			GroupUser.doCleanup()
 		}
