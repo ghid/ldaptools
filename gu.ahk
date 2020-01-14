@@ -40,7 +40,7 @@ class GroupUser extends LdapTool {
 					. "`nin: " gotException.file " #" gotException.line
 			Ansi.writeLine(gotException.message)
 			Ansi.writeLine(optionParser.usage())
-			returnCode := gotException.Extra
+			returnCode := gotException.extra
 		} finally {
 			GroupUser.doCleanup()
 		}
@@ -196,7 +196,8 @@ class GroupUser extends LdapTool {
 					if (memberData.nestedLevel
 							> GroupUser.options.maxNestedLevel) {
 						throw Exception("error: "
-								. "Cyclic reference detected: `n`t" memberDn "`n`t<- " groupCn ; ahklint-ignore: W002
+								. "Cyclic reference detected: `n`t"
+								. memberDn "`n`t<- " groupCn
 								,, GroupUser.RC_CYCLE_DETECTED)
 					}
 					GroupUser.membersOfGroupsAndSubGroups(cn, memberData)
@@ -217,12 +218,10 @@ class GroupUser extends LdapTool {
 	}
 
 	isCnAGroup(cn) {
-		loop {
-			ret := GroupUser.ldapConnection.search(searchResult
-					, GroupUser.options.baseDn
-					, "(&(objectclass=" GroupUser.options.filterObjectClass
-					. ")(cn=" cn "))")
-		} until (ret != 80) ; @todo: Find out, why this is necessary
+		ret := GroupUser.ldapConnection.search(searchResult
+				, GroupUser.options.baseDn
+				, "(&(objectclass=" GroupUser.options.filterObjectClass
+				. ")(cn=" cn "))")
 		if (!ret == Ldap.LDAP_SUCCESS) {
 			throw Exception("error: "
 					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
@@ -242,18 +241,12 @@ class GroupUser extends LdapTool {
 }
 
 #NoEnv ; notest-begin
-#MaxHotkeysPerInterval 99000000
-#HotkeyInterval 99000000
-#KeyHistory 0
+if (!A_IsCompiled) {
+	#Warn All, StdOut
+}
 ListLines Off
 Process, Priority, , H ;if unstable, comment or remove this line
 SetBatchLines, -1
-SetKeyDelay, -1, -1
-SetMouseDelay, -1
-SetDefaultMouseSpeed, 0
-SetWinDelay, -1
-SetControlDelay, -1
-SendMode Input
 
 #Include <App>
 #Include <cui-libs>

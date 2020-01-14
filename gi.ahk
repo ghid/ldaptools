@@ -41,6 +41,7 @@ class GroupInfo extends LdapTool {
 					. "`nin: " gotException.file " #" gotException.line
 			Ansi.writeLine(gotException.message)
 			Ansi.writeLine(optionParser.usage())
+			returnCode := gotException.extra
 		}
 		finally {
 			GroupInfo.doCleanup()
@@ -272,13 +273,16 @@ class GroupInfo extends LdapTool {
 	}
 }
 
-captureRegExGroupCallback(number, no_opt="") {
+captureRegExGroupCallback(number, noOpt="") {
 	GroupInfo.capturedRegExGroups.push(number)
 }
 
 #NoEnv ; notest-begin
-#Warn All, StdOut
+if (!A_IsCompiled) {
+	#Warn All, StdOut
+}
 ListLines Off
+Process, Priority, , H ;if unstable, comment or remove this line
 SetBatchLines, -1
 
 #Include <App>
@@ -291,6 +295,6 @@ SetBatchLines, -1
 #Include <modules\structure\LDAPAPIInfo>
 #Include <modules\structure\LDAPMod>
 
-Main:
+Ansi.NO_BUFFER := true
 exitapp App.checkRequiredClasses(GroupInfo).run(A_Args) ; notest-end
 ; vim:tw=0:ts=4:sts=4:sw=4:noet:ft=autohotkey:bomb
