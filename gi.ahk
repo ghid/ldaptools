@@ -1,57 +1,22 @@
 ﻿; ahk: x86
 ; ahk: console
-class GroupInfo {
+class GroupInfo extends LdapTool {
 
 	requires() {
-		return [Ansi, Ldap, OptParser, String, System]
+		return [Ansi, Ldap, Object, OptParser, String, System]
 	}
 
 	#Include %A_LineFile%\..\modules
 	#Include entry.ahk
 
-	static RC_OK := -1
-	static RC_MISSING_ARG := -2
-	static RC_INVALID_ARGS := -3
-	static RC_CYCLE_DETECTED := -4
-	static RC_CN_NOT_FOUND := -5
-	static RC_CN_AMBIGOUS := -6
-	static RC_TOO_MANY_ARGS := -7
-
 	static options := GroupInfo.setDefaults()
 
 	static cn := ""
 	static capturedRegExGroups := []
-	static objectClassForGroupFilter := "groupOfNames"
-
-	static ldapConnection := 0
 
 	setDefaults() {
-		return { append: ""
-				, baseDn: ""
-				, color: false
-				, count: false
-				, countOnly: false
-				, useEnvironmentVariables: false
-				, filter: "*"
-				, group: ""
-				, help: false
-				, host: "localhost"
-				, ibmAllGroups: false
-				, ibmNestedGroups: false
-				, ignoreCase: -1
-				, lower: false
-				, maxNestedLevel: 32
-				, output: ""
-				, port: 389
-				, quiet: false
-				, refs: false
-				, regex: false
-				, resultOnly: false
-				, short: false
-				, sort: false
-				, tempFile: 0
-				, upper: false
-				, version: false }
+		return Object.append(base.options.clone()
+				, {ibmAllGroups: false})
 	}
 
 	run(commandLineArguments) {
@@ -147,10 +112,8 @@ class GroupInfo {
 				. "(default=32)"
 				,, GroupInfo.options.maxNestedLevel
 				, GroupInfo.options.maxNestedLevel))
-		op.add(new OptParser.Boolean(0, "env"
-				, GroupInfo.options, "useEnvironmentVariables"
-				, "Ignore environment variable GI_OPTIONS"
-				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+		op.add(new OptParser.Line("--[no]env"
+				, "Ignore environment variable GI_OPTIONS"))
 		op.add(new OptParser.Boolean("q", "quiet", GroupInfo.options, "quiet"
 				, "Suppress output of results"))
 		op.add(new OptParser.Boolean(0, "version", GroupInfo.options, "version"
@@ -217,7 +180,7 @@ class GroupInfo {
 
 	handleIBMnestedGroups() {
 		if (GroupInfo.options.ibmNestedGroups) {
-			GroupInfo.objectClassForGroupFilter := "ibm-nestedGroup"
+			GroupInfo.options.filterObjectClass := "ibm-nestedGroup"
 		}
 	}
 
@@ -374,7 +337,7 @@ class GroupInfo {
 	searchGroupsInWhichDnIsMember(memberDn, groupData) {
 		if (!GroupInfo.ldapConnection.search(searchResult
 				, GroupInfo.options.baseDn
-				, "(&(objectclass=" GroupInfo.objectClassForGroupFilter ")"
+				, "(&(objectclass=" GroupInfo.options.filterObjectClass ")"
 				. "(member=" memberDn "))") == Ldap.LDAP_SUCCESS) {
 			throw Exception(Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))
@@ -513,6 +476,7 @@ SetBatchLines, -1
 #Include <cui-libs>
 #Include <Ldap>
 #Include <System>
+#Include %A_LineFile%\..\modules\ldaptool.ahk
 #Include *i %A_ScriptDir%\gi.versioninfo
 
 #Include <modules\structure\LDAPAPIInfo>

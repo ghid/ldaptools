@@ -1,21 +1,13 @@
 ﻿; ahk: x86
 ; ahk: console
-class GroupUser {
+class GroupUser extends LdapTool {
 
 	requires() {
-		return [Ansi, Ldap, OptParser, String, System]
+		return [Ansi, Ldap, Object, OptParser, String, System]
 	}
 
 	#Include %A_LineFile%\..\modules
 	#Include entry.ahk
-
-	static RC_OK := -1
-	static RC_MISSING_ARG := -2
-	static RC_INVALID_ARGS := -3
-	static RC_CYCLE_DETECTED := -4
-	static RC_CN_NOT_FOUND := -5
-	static RC_CN_AMBIGOUS := -6
-	static RC_TOO_MANY_ARGS := -7
 
 	static options := GroupUser.setDefaults()
 
@@ -23,34 +15,9 @@ class GroupUser {
 	static cn := ""
 	static dn := ""
 
-	static ldapConnection := 0
-
 	setDefaults() {
-		return { append: ""
-				, baseDn: ""
-				, color: false
-				, count: ""
-				, countOnly: false
-				, filter: "*"
-				, groupFilter: "groupOfNames"
-				, help: false
-				, host: "localhost"
-				, ibmNestedGroups: false
-				, ignoreCase: -1
-				, invertMatch: false
-				, lower: false
-				, maxNestedLevel: 32
-				, output: ""
-				, port: 389
-				, quiet: false
-				, refs: false
-				, regex: false
-				, resultOnly: false
-				, short: false
-				, sort: false
-				, tempFile: 0
-				, upper: false
-				, version: false }
+		return Object.append(base.options.clone()
+				, {invertMatch: false})
 	}
 
 	run(args) {
@@ -149,10 +116,8 @@ class GroupUser {
 				. "(default=32)"
 				,, GroupUser.options.maxNestedLevel
 				, GroupUser.options.maxNestedLevel))
-		op.add(new OptParser.Boolean(0, "env"
-				, GroupUser.options, "env_dummy"
-				, "Ignore environment variable GU_OPTIONS"
-				, OptParser.OPT_NEG|OptParser.OPT_NEG_USAGE))
+		op.add(new OptParser.Line("--[no]env"
+				, "Ignore environment variable GU_OPTIONS"))
 		op.add(new OptParser.Boolean("q", "quiet"
 				, GroupUser.options, "quiet"
 				, "Suppress output of results"))
@@ -202,7 +167,7 @@ class GroupUser {
 
 	handleIBMnestedGroups() {
 		if (GroupUser.options.ibmNestedGroups) {
-			GroupUser.options.groupFilter := "ibm-nestedGroup"
+			GroupUser.options.filterObjectClass := "ibm-nestedGroup"
 		}
 	}
 
@@ -369,7 +334,7 @@ class GroupUser {
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
 		ldapFilter := Format("(&(objectclass={:s})(cn={:s}))"
-				, GroupUser.options.groupFilter, groupCn)
+				, GroupUser.options.filterObjectClass, groupCn)
 		if (!GroupUser.ldapConnection.search(searchResult
 				, GroupUser.options.baseDn, ldapFilter
 				, Ldap.SCOPE_SUBTREE, ["member"]) == Ldap.LDAP_SUCCESS) {
@@ -442,7 +407,7 @@ class GroupUser {
 		loop {
 			ret := GroupUser.ldapConnection.search(searchResult
 					, GroupUser.options.baseDn
-					, "(&(objectclass=" GroupUser.options.groupFilter
+					, "(&(objectclass=" GroupUser.options.filterObjectClass
 					. ")(cn=" cn "))")
 		} until (ret != 80) ; @todo: Find out, why this is necessary
 		if (!ret == Ldap.LDAP_SUCCESS) {
@@ -481,6 +446,7 @@ SendMode Input
 #Include <cui-libs>
 #Include <Ldap>
 #Include <System>
+#Include %A_LineFile%\..\modules\ldaptool.ahk
 #Include *i %A_ScriptDir%\gu.versioninfo
 
 #Include <modules\structure\LDAPAPIInfo>
