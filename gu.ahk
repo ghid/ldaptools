@@ -24,10 +24,10 @@ class GroupUser extends LdapTool {
 	run(commandLineArguments) {
 		try {
 			returnCode := GroupUser.RC_OK
-			op := GroupUser.cli()
-			parsedArguments := op.parse(commandLineArguments)
+			optionParser := GroupUser.cli()
+			parsedArguments := optionParser.parse(commandLineArguments)
 			if (GroupUser.shallHelpOrVersionInfoBeDisplayed()) {
-				returnCode := GroupUser.showHelpOrVersionInfo(op)
+				returnCode := GroupUser.showHelpOrVersionInfo(optionParser)
 			} else {
 				GroupUser.evaluateCommandLineOptions(parsedArguments)
 				GroupUser.handleIBMnestedGroups()
@@ -38,7 +38,7 @@ class GroupUser extends LdapTool {
 		} catch e {
 			OutputDebug % A_ThisFunc ": " e.message " " e.file " #" e.line
 			Ansi.writeLine(e.message)
-			Ansi.writeLine(op.usage())
+			Ansi.writeLine(optionParser.usage())
 			returnCode := e.Extra
 		} finally {
 			GroupUser.doCleanup()
