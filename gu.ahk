@@ -143,22 +143,15 @@ class GroupUser extends LdapTool {
 		return numberOfHits
 	}
 
-	processOutput(entry) {
-		if (GroupUser.options.quiet) {
-			return false
-		}
-		return GroupUser.filterOutput(entry)
-	}
-
 	filterOutput(entry) {
-		text := entry.toString()
-		if (res := entry.handleCase(entry.handleShort(entry.dn))
+		if (isDnMatchingTheFilter
+				:= entry.handleCase(entry.handleShort(entry.theDn))
 				.filter(GroupUser.options.filter, GroupUser.options.regex
 				, (GroupUser.options.ignoreCase = true ? true : false)
 				, GroupUser.options.invertMatch)) {
 			GroupUser.writeOutput(entry.toString())
 		}
-		return res
+		return isDnMatchingTheFilter
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {

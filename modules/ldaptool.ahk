@@ -193,6 +193,13 @@ class LdapTool {
 		return IsObject(this.options.tempFile)
 	}
 
+	processOutput(entry) {
+		if (this.options.quiet) {
+			return false
+		}
+		return this.filterOutput(entry)
+	}
+
 	writeOutput(text) {
 		if (this.options.tempFile) {
 			this.options.tempFile.writeLine((

@@ -241,17 +241,6 @@ class GroupInfo extends LdapTool {
 		return GroupInfo.checkNumberOfEntries(searchResult)
 	}
 
-	processOutput(entry) {
-		if (!GroupInfo.options.quiet) {
-			try {
-				isDnMatchingTheFilter := GroupInfo.filterOutput(entry)
-			} catch gotException {
-				throw gotException
-			}
-		}
-		return isDnMatchingTheFilter
-	}
-
 	filterOutput(entry) {
 		if (isDnMatchingTheFilter
 				:= entry.handleCase(entry.handleShort(entry.theDn))
