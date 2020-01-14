@@ -351,10 +351,6 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	tempFileWasNecessary() {
-		return IsObject(GroupInfo.options.tempFile)
-	}
-
 	distributeTempFileContent() {
 		fileName := "*"
 		if (GroupInfo.options.append) {

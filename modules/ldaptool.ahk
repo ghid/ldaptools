@@ -111,6 +111,10 @@ class LdapTool {
 		}
 	}
 
+	tempFileWasNecessary() {
+		return IsObject(this.options.tempFile)
+	}
+
 	doCleanup() {
 		if (this.ldapConnection) {
 			this.ldapConnection.unbind()

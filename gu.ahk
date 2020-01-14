@@ -162,10 +162,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	tempFileWasNecessary() {
-		return IsObject(GroupUser.options.tempFile)
-	}
-
 	distributeTempFileContent() {
 		fileName := "*"
 		if (GroupUser.options.append) {
