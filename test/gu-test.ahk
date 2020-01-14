@@ -110,18 +110,18 @@ class GroupUserTest extends TestCase {
 	}
 
 	@Before_ResetOpts() {
-		GroupUser.options := GroupUser.setDefaults()
+		GroupUser.setDefaults()
 		EnvSet GU_OPTIONS,
 	}
 
 	@Test_evaluateCommandLineOptions() {
 		this.assertException(GroupUser, "evaluateCommandLineOptions",,, [])
-		GroupUser.options := GroupUser.setDefaults()
+		GroupUser.setDefaults()
 		GroupUser.Options.output := true
 		GroupUser.Options.append := true
 		this.assertException(GroupUser, "evaluateCommandLineOptions",,
 				, ["xxx"])
-		GroupUser.options := GroupUser.setDefaults()
+		GroupUser.setDefaults()
 		GroupUser.Options.lower := true
 		GroupUser.Options.upper := true
 		this.assertException(GroupUser, "evaluateCommandLineOptions",,

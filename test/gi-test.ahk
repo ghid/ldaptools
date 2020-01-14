@@ -110,7 +110,7 @@ class GroupInfoTest extends TestCase {
 	}
 
 	@Before_ResetOpts() {
-		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.setDefaults()
 		EnvSet GI_OPTIONS,
 	}
 
@@ -118,17 +118,17 @@ class GroupInfoTest extends TestCase {
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,, [])
 		this.assertException(GroupInfo, "evaluateCommandLineOptions"
 				,,, ["one", "two", "three"])
-		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.setDefaults()
 		GroupInfo.Options.output := true
 		GroupInfo.Options.append := true
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
 				, ["xxx"])
-		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.setDefaults()
 		GroupInfo.Options.lower := true
 		GroupInfo.Options.upper := true
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,
 				, ["xxx"])
-		GroupInfo.options := GroupInfo.setDefaults()
+		GroupInfo.setDefaults()
 		GroupInfo.Options.ibmAllGroups := true
 		GroupInfo.Options.ibmNestedGroups := true
 		this.assertException(GroupInfo, "evaluateCommandLineOptions",,

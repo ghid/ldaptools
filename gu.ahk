@@ -9,7 +9,7 @@ class GroupUser extends LdapTool {
 	#Include %A_LineFile%\..\modules
 	#Include entry.ahk
 
-	static options := GroupUser.setDefaults()
+	static options := {}
 
 	static out_file := ""
 	static cn := ""
@@ -17,12 +17,13 @@ class GroupUser extends LdapTool {
 	static tempFileName := A_Temp "\__gu__.dat"
 
 	setDefaults() {
-		return Object.append(base.options.clone()
+		GroupUser.options := Object.append(base.options.clone()
 				, {invertMatch: false})
 	}
 
 	run(commandLineArguments) {
 		try {
+			GroupUser.setDefaults()
 			returnCode := GroupUser.RC_OK
 			optionParser := GroupUser.cli()
 			parsedArguments := optionParser.parse(commandLineArguments)

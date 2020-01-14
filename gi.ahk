@@ -9,19 +9,20 @@ class GroupInfo extends LdapTool {
 	#Include %A_LineFile%\..\modules
 	#Include entry.ahk
 
-	static options := GroupInfo.setDefaults()
+	static options := {}
 
 	static cn := ""
 	static capturedRegExGroups := []
 	static tempFileName := A_Temp "\__gi__.dat"
 
 	setDefaults() {
-		return Object.append(base.options.clone()
+		GroupInfo.options := Object.append(base.options.clone()
 				, {ibmAllGroups: false})
 	}
 
 	run(commandLineArguments) {
 		try {
+			GroupInfo.setDefaults()
 			returnCode := GroupInfo.RC_OK
 			optionParser := GroupInfo.cli()
 			parsedArguments := optionParser.parse(commandLineArguments)

@@ -45,6 +45,7 @@ class LdapTool {
 	}
 
 	showHelpOrVersionInfo(optionParser) {
+		global G_VERSION_INFO
 		if (this.options.help) {
 			Ansi.writeLine(optionParser.usage())
 		} else if (this.options.version) {
