@@ -136,13 +136,6 @@ class GroupUser extends LdapTool {
 		}
 	}
 
-	handleParsedArguments(parsedArguments) {
-		GroupUser.cn := parsedArguments[1]
-		if (parsedArguments.count() == 2) {
-			GroupUser.options.filter := parsedArguments[2]
-		}
-	}
-
 	handleCountOnly() {
 		if (!GroupUser.options.countOnly
 				&& !GroupUser.options.resultOnly) {

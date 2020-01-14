@@ -153,13 +153,6 @@ class GroupInfo extends LdapTool {
 		}
 	}
 
-	handleParsedArguments(parsedArguments) {
-		GroupInfo.cn := parsedArguments[1]
-		if (parsedArguments.count() == 2) {
-			GroupInfo.options.filter := parsedArguments[2]
-		}
-	}
-
 	handleRegExFilter() {
 		if (GroupInfo.options.regex) {
 			GroupInfo.options.filter := "(.*)"

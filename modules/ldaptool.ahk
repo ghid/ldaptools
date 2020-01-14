@@ -75,4 +75,11 @@ class LdapTool {
 		}
 	}
 
+	handleParsedArguments(parsedArguments) {
+		this.cn := parsedArguments[1]
+		if (parsedArguments.count() == 2) {
+			this.options.filter := parsedArguments[2]
+		}
+	}
+
 }
