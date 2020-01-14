@@ -20,17 +20,17 @@ class GroupUser extends LdapTool {
 				, {invertMatch: false})
 	}
 
-	run(args) {
+	run(commandLineArguments) {
 		try {
 			rc := GroupUser.RC_OK
 			op := GroupUser.cli()
-			args := op.parse(args)
+			parsedArguments := op.parse(commandLineArguments)
 			if (GroupUser.shallHelpOrVersionInfoBeDisplayed()) {
 				rc := GroupUser.showHelpOrVersionInfo(op)
 			} else {
-				GroupUser.evaluateCommandLineOptions(args)
+				GroupUser.evaluateCommandLineOptions(parsedArguments)
 				GroupUser.handleIBMnestedGroups()
-				GroupUser.handleParsedArguments(args)
+				GroupUser.handleParsedArguments(parsedArguments)
 				GroupUser.handleCountOnly()
 				rc := GroupUser.handleHitCount(GroupUser.main())
 			}
@@ -128,27 +128,6 @@ class GroupUser extends LdapTool {
 				, GroupUser.options, "help"
 				, "Print help", OptParser.OPT_HIDDEN))
 		return op
-	}
-
-	evaluateCommandLineOptions(args) {
-		if (args.count() < 1) {
-			throw Exception("error: Missing argument"
-					,, GroupUser.RC_MISSING_ARG)
-		}
-		if (args.count() > 2) {
-			throw Exception("error: Too many arguments"
-					,, GroupUser.RC_TOO_MANY_ARGS)
-		}
-		if (GroupUser.options.output && GroupUser.options.append) {
-			throw Exception("error: Options '-o' and '-a' "
-					. "cannot be used together"
-					,, GroupUser.RC_INVALID_ARGS)
-		}
-		if (GroupUser.options.upper && GroupUser.options.lower) {
-			throw Exception("error: Options '-l' and '-u' "
-					. "cannot be used together"
-					,, GroupUser.RC_INVALID_ARGS)
-		}
 	}
 
 	handleIBMnestedGroups() {

@@ -124,24 +124,7 @@ class GroupInfo extends LdapTool {
 	}
 
 	evaluateCommandLineOptions(parsedArguments) {
-		if (parsedArguments.count() < 1) {
-			throw Exception("error: Missing argument"
-					,, GroupInfo.RC_MISSING_ARG)
-		}
-		if (parsedArguments.count() > 2) {
-			throw Exception("error: Too many arguments"
-					,, GroupInfo.RC_TOO_MANY_ARGS)
-		}
-		if (GroupInfo.options.output && GroupInfo.options.append) {
-			throw Exception("error: Options '-o' and '-a' "
-					. "cannot be used together"
-					,, GroupInfo.RC_INVALID_ARGS)
-		}
-		if (GroupInfo.options.upper && GroupInfo.options.lower) {
-			throw Exception("error: Options '-l' and '-u' "
-					. " cannot be used together"
-					,, GroupInfo.RC_INVALID_ARGS)
-		}
+		base.evaluateCommandLineOptions(parsedArguments)
 		if (GroupInfo.options.ibmAllGroups && GroupInfo.options.refs) {
 			throw Exception("error: Options '-r' and '--ibm-all-groups' "
 					. "cannot be used together"

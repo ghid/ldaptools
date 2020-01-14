@@ -53,4 +53,26 @@ class LdapTool {
 		}
 		return ""
 	}
+
+	evaluateCommandLineOptions(args) {
+		if (args.count() < 1) {
+			throw Exception("error: Missing argument"
+					,, this.RC_MISSING_ARG)
+		}
+		if (args.count() > 2) {
+			throw Exception("error: Too many arguments"
+					,, this.RC_TOO_MANY_ARGS)
+		}
+		if (this.options.output && this.options.append) {
+			throw Exception("error: Options '-o' and '-a' "
+					. "cannot be used together"
+					,, this.RC_INVALID_ARGS)
+		}
+		if (this.options.upper && this.options.lower) {
+			throw Exception("error: Options '-l' and '-u' "
+					. "cannot be used together"
+					,, this.RC_INVALID_ARGS)
+		}
+	}
+
 }
