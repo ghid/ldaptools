@@ -172,9 +172,9 @@ class GroupUser extends LdapTool {
 				memberAttribute
 						:= GroupUser.ldapConnection.firstAttribute(member)
 				while (memberAttribute) {
-					pValues := GroupUser.ldapConnection.getValues(member
+					memberPtrList := GroupUser.ldapConnection.getValues(member
 							, memberAttribute)
-					aValues := System.ptrListToStrArray(pValues, false)
+					aValues := System.ptrListToStrArray(memberPtrList, false)
 					GroupUser.processMembersOfGroup(memberData, groupCn
 							, aValues)
 					memberAttribute
