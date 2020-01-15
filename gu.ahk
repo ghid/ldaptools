@@ -174,9 +174,9 @@ class GroupUser extends LdapTool {
 				while (memberAttribute) {
 					memberPtrList := GroupUser.ldapConnection.getValues(member
 							, memberAttribute)
-					aValues := System.ptrListToStrArray(memberPtrList, false)
+					memberList := System.ptrListToStrArray(memberPtrList, false)
 					GroupUser.processMembersOfGroup(memberData, groupCn
-							, aValues)
+							, memberList)
 					memberAttribute
 							:= GroupUser.ldapConnection.nextAttribute(member)
 				}
@@ -185,8 +185,8 @@ class GroupUser extends LdapTool {
 		return memberData.numberOfMembers
 	}
 
-	processMembersOfGroup(memberData, groupCn, aValues) {
-		Arrays.forEach(aValues
+	processMembersOfGroup(memberData, groupCn, memberList) {
+		Arrays.forEach(memberList
 				, GroupUser.resolveGroupOrFillMemberList.bind(GroupUser
 				, memberData, groupCn))
 	}
