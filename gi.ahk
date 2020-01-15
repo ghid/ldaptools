@@ -95,6 +95,9 @@ class GroupInfo extends LdapTool {
 				, "refs", "Display group relations"))
 		op.add(new OptParser.Boolean("s", "sort", GroupInfo.options
 				, "sort", "Sort result"))
+		op.add(new OptParser.Boolean("v", "invert-match"
+				, GroupInfo.options, "invertMatch"
+				, "Show not matching results"))
 		op.add(new OptParser.Boolean(0, "color", GroupInfo.options, "color"
 				, "Colored output "
 				. "(deactivated by default if -a or -o option is set)"
@@ -248,7 +251,7 @@ class GroupInfo extends LdapTool {
 				:= entry.handleCase(entry.handleShort(entry.theDn))
 				.filter(GroupInfo.options.filter, GroupInfo.options.regex
 				, (GroupInfo.options.ignoreCase == true ? true : false)
-				, false
+				, GroupInfo.options.invertMatch
 				, matches := "")) {
 			entry.theDn := GroupInfo.rewriteDnWithMatches(entry.theDn, matches)
 			GroupInfo.writeOutput(entry.toString())

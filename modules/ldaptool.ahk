@@ -25,6 +25,7 @@ class LdapTool {
 				, host: "localhost"
 				, ibmNestedGroups: false
 				, ignoreCase: -1
+				, invertMatch: false
 				, lower: false
 				, maxNestedLevel: 32
 				, output: ""

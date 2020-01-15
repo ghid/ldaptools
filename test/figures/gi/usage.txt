@@ -21,6 +21,7 @@ Options
     -u, --upper           Display result in upper case characters
     -r, --refs            Display group relations
     -s, --sort            Sort result
+    -v, --invert-match    Show not matching results
     --[no]color           Colored output (deactivated by default if -a or -o option is
                           set)
     -R, --result-only     Suppress any other output than the found groups

@@ -196,6 +196,14 @@ class GroupInfoTest extends TestCase {
 				, TestCase.fileContent(GroupInfoTest.figures "\search.txt"))
 	}
 
+	@Test_searchInvertWithCount() {
+		this.assertEquals(GroupInfo.run(["-p", "10389", "-1revc", "snoopy"
+				, "\ws$"]), 1)
+		this.assertEquals(TestCase.fileContent(GroupInfoTest.output)
+				, TestCase.fileContent(GroupInfoTest.figures
+				. "\searchInvertWithCount.txt"))
+	}
+
 	@Test_searchRegEx() {
 		this.assertEquals(GroupInfo.run(["-p", "10389", "-1e", "snoopy"
 				, "\ws$"]), 2)
