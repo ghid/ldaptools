@@ -11,7 +11,6 @@ class GroupUser extends LdapTool {
 
 	static options := {}
 
-	static cn := ""
 	static tempFileName := A_Temp "\__gu__.dat"
 
 	setDefaults() {
@@ -135,7 +134,8 @@ class GroupUser extends LdapTool {
 		GroupUser.openTempFileIfNecessary()
 		GroupUser.connectToLdapServer()
 		GroupUser.printDn()
-		numberOfHits := GroupUser.membersOfGroupsAndSubGroups(GroupUser.cn
+		numberOfHits := GroupUser
+				.membersOfGroupsAndSubGroups(GroupUser.options.searchForCn
 				, new GroupUser.MemberData())
 		if (GroupUser.tempFileWasNecessary()) {
 			GroupUser.distributeTempFileContent()

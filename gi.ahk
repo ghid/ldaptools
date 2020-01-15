@@ -11,7 +11,6 @@ class GroupInfo extends LdapTool {
 
 	static options := {}
 
-	static cn := ""
 	static capturedRegExGroups := []
 	static tempFileName := A_Temp "\__gi__.dat"
 
@@ -161,7 +160,7 @@ class GroupInfo extends LdapTool {
 		GroupInfo.connectToLdapServer()
 		dn := GroupInfo.printDn()
 		numberOfHits := (GroupInfo.options.ibmAllGroups
-				? GroupInfo.groupsOfCnByUsingIbmAllGroups(GroupInfo.cn)
+				? GroupInfo.groupsOfCnByUsingIbmAllGroups()
 				: GroupInfo.groupsInWhichDnIsMember(dn
 				, new GroupInfo.GroupData))
 		if (GroupInfo.tempFileWasNecessary()) {
@@ -170,11 +169,12 @@ class GroupInfo extends LdapTool {
 		return numberOfHits
 	}
 
-	groupsOfCnByUsingIbmAllGroups(cn) {
+	groupsOfCnByUsingIbmAllGroups() {
 		numberOfGroups := 0
 		groupsOfCn := []
 		if (!GroupInfo.ldapConnection.search(searchResult
-				, GroupInfo.options.baseDn, "(cn=" cn ")"
+				, GroupInfo.options.baseDn
+				, "(cn=" GroupInfo.options.searchForCn ")"
 				,, ["ibm-allgroups"]) == Ldap.LDAP_SUCCESS) {
 			throw Exception("error" Ldap.err2String(GroupInfo.ldapConnection
 					.getLastError()))

@@ -34,6 +34,7 @@ class LdapTool {
 				, regex: false
 				, resultOnly: false
 				, short: false
+				, searchForCn: ""
 				, sort: false
 				, tempFile: 0
 				, upper: false
@@ -77,7 +78,7 @@ class LdapTool {
 	}
 
 	handleParsedArguments(parsedArguments) {
-		this.cn := parsedArguments[1]
+		this.options.searchForCn := parsedArguments[1]
 		if (parsedArguments.count() == 2) {
 			this.options.filter := parsedArguments[2]
 		}
@@ -113,7 +114,7 @@ class LdapTool {
 	}
 
 	printDn() {
-		dn := this.findDnByFilter("cn=" this.cn)
+		dn := this.findDnByFilter("cn=" this.options.searchForCn)
 		if (!this.options.countOnly && !this.options.resultOnly) {
 			Ansi.writeLine(new this.Entry(dn, "", this.options).dn)
 		}
