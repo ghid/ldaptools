@@ -3,7 +3,7 @@
 class GroupUser extends LdapTool {
 
 	requires() {
-		return [Ansi, Ldap, Object, OptParser, String, System]
+		return [Ansi, Arrays, Ldap, Object, OptParser, String, System]
 	}
 
 	#Include %A_LineFile%\..\modules
@@ -172,9 +172,9 @@ class GroupUser extends LdapTool {
 				pAttr := GroupUser.ldapConnection.firstAttribute(member)
 				while (pAttr) {
 					pValues := GroupUser.ldapConnection.getValues(member, pAttr)
-					aValues := System.ptrListToStrArray(pValues)
-					GroupUser.processMembersOfGroup(aValues, groupCn
-							, memberData)
+					aValues := System.ptrListToStrArray(pValues, false)
+					GroupUser.processMembersOfGroup(memberData, groupCn
+							, aValues)
 					pAttr := GroupUser.ldapConnection.nextAttribute(member)
 				}
 			}
@@ -182,41 +182,23 @@ class GroupUser extends LdapTool {
 		return memberData.numberOfMembers
 	}
 
-	getCnOfMemberDn(memberDn) {
-		RegExMatch(memberDn, "i)cn=(.+?)\s*(,.*$|$)", $)
-		return $1
+	processMembersOfGroup(memberData, groupCn, aValues) {
+		Arrays.forEach(aValues
+				, GroupUser.resolveGroupOrFillMemberList.bind(GroupUser
+				, memberData, groupCn))
 	}
 
-	processMembersOfGroup(aValues, groupCn, memberData) {
-		for _, memberDn in aValues {
-			if (cn := GroupUser.getCnOfMemberDn(memberDn)) {
-				if (GroupUser.isCnAGroup(cn)) {
-					memberData.nestedLevel++
-					if (memberData.nestedLevel
-							> GroupUser.options.maxNestedLevel) {
-						throw Exception("error: "
-								. "Cyclic reference detected: `n`t"
-								. memberDn "`n`t<- " groupCn
-								,, GroupUser.RC_CYCLE_DETECTED)
-					}
-					GroupUser.membersOfGroupsAndSubGroups(cn, memberData)
-					memberData.nestedLevel--
-				} else {
-					if (memberData.memberList[memberDn] = "") {
-						if (GroupUser.processOutput(new GroupUser.Entry(memberDn
-								, (GroupUser.options.short ? groupCn
-								: GroupUser.findDnByFilter("cn=" groupCn))
-								, GroupUser.options))) {
-							memberData.numberOfMembers++
-						}
-						memberData.memberList[memberDn] := 1
-					}
-				}
-			}
+	resolveGroupOrFillMemberList(memberData, groupCn, memberDn) {
+		if (GroupUser.isDnAGroup(memberDn)) {
+			GroupUser.resolveGroup(memberData, memberDn
+					, GroupUser.getCnOfMemberDn(memberDn))
+		} else {
+			GroupUser.fillMemberList(memberData, memberDn, groupCn)
 		}
 	}
 
-	isCnAGroup(cn) {
+	isDnAGroup(dn) {
+		cn := GroupUser.getCnOfMemberDn(dn)
 		ret := GroupUser.ldapConnection.search(searchResult
 				, GroupUser.options.baseDn
 				, "(&(objectclass=" GroupUser.options.filterObjectClass
@@ -225,10 +207,41 @@ class GroupUser extends LdapTool {
 			throw Exception("error: "
 					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
 		}
-		if (GroupUser.ldapConnection.countEntries(searchResult)) {
+		if (cn && GroupUser.ldapConnection.countEntries(searchResult)) {
 			return true
 		} else	{
 			return false
+		}
+	}
+
+	getCnOfMemberDn(memberDn) {
+		RegExMatch(memberDn, "i)cn=(.+?)\s*(,.*$|$)", $)
+		return $1
+	}
+
+	resolveGroup(memberData, memberDn, groupCn) {
+		memberData.nestedLevel++
+		if (memberData.nestedLevel
+				> GroupUser.options.maxNestedLevel) {
+			throw Exception("error: "
+					. "Cyclic reference detected: `n`t"
+					. memberDn "`n`t<- " groupCn
+					,, GroupUser.RC_CYCLE_DETECTED)
+		}
+		GroupUser.membersOfGroupsAndSubGroups(GroupUser
+				.getCnOfMemberDn(memberDn), memberData)
+		memberData.nestedLevel--
+	}
+
+	fillMemberList(memberData, memberDn, groupCn) {
+		if (memberData.memberList[memberDn] = "") {
+			if (GroupUser.processOutput(new GroupUser.Entry(memberDn
+					, (GroupUser.options.short
+					? groupCn : GroupUser.findDnByFilter("cn=" groupCn))
+					, GroupUser.options))) {
+				memberData.numberOfMembers++
+			}
+			memberData.memberList[memberDn] := 1
 		}
 	}
 
