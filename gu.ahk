@@ -169,13 +169,16 @@ class GroupUser extends LdapTool {
 					? GroupUser.ldapConnection.firstEntry(searchResult)
 					: GroupUser.ldapConnection.nextEntry(member))
 			if (member) {
-				pAttr := GroupUser.ldapConnection.firstAttribute(member)
-				while (pAttr) {
-					pValues := GroupUser.ldapConnection.getValues(member, pAttr)
+				memberAttribute
+						:= GroupUser.ldapConnection.firstAttribute(member)
+				while (memberAttribute) {
+					pValues := GroupUser.ldapConnection.getValues(member
+							, memberAttribute)
 					aValues := System.ptrListToStrArray(pValues, false)
 					GroupUser.processMembersOfGroup(memberData, groupCn
 							, aValues)
-					pAttr := GroupUser.ldapConnection.nextAttribute(member)
+					memberAttribute
+							:= GroupUser.ldapConnection.nextAttribute(member)
 				}
 			}
 		}
