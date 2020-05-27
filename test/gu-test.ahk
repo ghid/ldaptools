@@ -1,4 +1,4 @@
-; ahk: console
+﻿; ahk: console
 ; ahk: x86
 #NoEnv
 #Warn All, StdOut
@@ -21,8 +21,8 @@ class GroupUserTest extends TestCase {
 
 	@BeforeClass_Setup() {
 		RC_OK := -1
-	    RC_MISSING_ARG := -2
-	    RC_INVALID_ARGS := -3
+		RC_MISSING_ARG := -2
+		RC_INVALID_ARGS := -3
 		RC_CYCLE_DETECTED := -4
 		RC_CN_NOT_FOUND := -5
 		RC_CN_AMBIGOUS := -6
@@ -129,53 +129,53 @@ class GroupUserTest extends TestCase {
 	}
 
 	@Test_usage() {
-		this.assertEquals(GroupUser.run(["--help"]), "")
+		this.assertEquals(GroupUser.main(["--help"]), "")
 		this.assertEquals(TestCase.fileContent(GroupUserTest
 				.figures "\usage.txt")
 				, TestCase.fileContent(GroupUserTest.output))
 	}
 
 	@Test_simple() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest
 				.figures "\simple.txt")
 				, TestCase.fileContent(GroupUserTest.output))
 	}
 
 	@Test_simpleUpperCase() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-u", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-u", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest
 				.figures "\simpleUpperCase.txt")
 				, TestCase.fileContent(GroupUserTest.output))
 	}
 
 	@Test_short() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-1", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-1", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures "\short.txt"))
 	}
 
 	@Test_count() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-c", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-c", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures "\count.txt"))
 	}
 
 	@Test_withRefs() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-r", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-r", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures "\withRefs.txt"))
 	}
 
 	@Test_shortWithRefs() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-r1", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-r1", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
 				. "\shortWithRefs.txt"))
 	}
 
 	@Test_withRefsNoColor() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-r", "--no-color"
+		this.assertEquals(GroupUser.main(["-p", "10389", "-r", "--no-color"
 				, "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
@@ -183,14 +183,14 @@ class GroupUserTest extends TestCase {
 	}
 
 	@Test_resultOnly() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-1R", "Peanuts"]), 7)
+		this.assertEquals(GroupUser.main(["-p", "10389", "-1R", "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
 				. "\resultOnly.txt"))
 	}
 
 	@Test_search() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-1re", "Peanuts"
+		this.assertEquals(GroupUser.main(["-p", "10389", "-1re", "Peanuts"
 				, "y$"]), 2)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
@@ -198,7 +198,7 @@ class GroupUserTest extends TestCase {
 	}
 
 	@Test_searchInvertWithCount() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-1revc", "Peanuts"
+		this.assertEquals(GroupUser.main(["-p", "10389", "-1revc", "Peanuts"
 				, "y$"]), 5)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
@@ -206,11 +206,19 @@ class GroupUserTest extends TestCase {
 	}
 
 	@Test_resultOnlySorted() {
-		this.assertEquals(GroupUser.run(["-p", "10389", "-1R", "--sort"
+		this.assertEquals(GroupUser.main(["-p", "10389", "-1R", "--sort"
 				, "Peanuts"]), 7)
 		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
 				, TestCase.fileContent(GroupUserTest.figures
 				. "\resultOnlySorted.txt"))
+	}
+
+	@Test_ignoreGroup() {
+		this.assertEquals(GroupUser.main(["-p", "10389", "-r1"
+				, "--ignore-group", "The Brown's Pets", "Peanuts"]), 5)
+		this.assertEquals(TestCase.fileContent(GroupUserTest.output)
+				, TestCase.fileContent(GroupUserTest.figures
+				. "\ignoreGroup.txt"))
 	}
 }
 

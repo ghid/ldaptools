@@ -18,7 +18,7 @@ class GroupUser extends LdapTool {
 				, {invertMatch: false})
 	}
 
-	run(commandLineArguments) {
+	main(commandLineArguments) {
 		try {
 			GroupUser.setDefaults()
 			returnCode := GroupUser.RC_OK
@@ -31,7 +31,7 @@ class GroupUser extends LdapTool {
 				GroupUser.handleIBMnestedGroups()
 				GroupUser.handleParsedArguments(parsedArguments)
 				GroupUser.handleCountOnly()
-				returnCode := GroupUser.handleHitCount(GroupUser.main())
+				returnCode := GroupUser.handleHitCount(GroupUser.run())
 			}
 		} catch gotException {
 			OutputDebug % gotException.what
@@ -130,7 +130,7 @@ class GroupUser extends LdapTool {
 		return op
 	}
 
-	main() {
+	run() {
 		GroupUser.openTempFileIfNecessary()
 		GroupUser.connectToLdapServer()
 		GroupUser.printDn()
@@ -274,5 +274,5 @@ SetBatchLines, -1
 #Include <modules\structure\LDAPMod>
 
 Ansi.NO_BUFFER := true
-exitapp App.checkRequiredClasses(GroupUser).run(A_Args)	; notest-end
+exitapp App.checkRequiredClasses(GroupUser).main(A_Args)	; notest-end
 ; vim:tw=0:ts=4:sts=4:sw=4:noet:ft=autohotkey:bomb
