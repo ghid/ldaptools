@@ -224,8 +224,7 @@ class GroupUser extends LdapTool {
 
 	resolveGroup(memberData, memberDn, groupCn) {
 		memberData.nestedLevel++
-		if (memberData.nestedLevel
-				> GroupUser.options.maxNestedLevel) {
+		if (memberData.nestedLevel > GroupUser.options.maxNestedLevel) {
 			throw Exception("error: "
 					. "Cyclic reference detected: `n`t"
 					. memberDn "`n`t<- " groupCn
