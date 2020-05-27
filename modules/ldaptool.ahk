@@ -1,4 +1,4 @@
-class LdapTool {
+﻿class LdapTool {
 
 	static RC_OK := -1
 	static RC_MISSING_ARG := -2
@@ -233,5 +233,6 @@ class LdapTool {
 		if (this.options.tempFile) {
 			this.options.tempFile.close()
 		}
+		Ansi.reset()
 	}
 }
