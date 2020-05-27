@@ -155,14 +155,7 @@ class GroupUser extends LdapTool {
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
-		ldapFilter := Format("(&(objectclass={:s})(cn={:s}))"
-				, GroupUser.options.filterObjectClass, groupCn)
-		if (!GroupUser.ldapConnection.search(searchResult
-				, GroupUser.options.baseDn, ldapFilter
-				, Ldap.SCOPE_SUBTREE, ["member"]) == Ldap.LDAP_SUCCESS) {
-			throw Exception("error: "
-					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
-		}
+		searchResult := GroupUser.searchGroup(groupCn)
 		numberOfEntriesFound := GroupUser.checkNumberOfEntries(searchResult)
 		loop %numberOfEntriesFound% {
 			member := (A_Index == 1
@@ -183,6 +176,18 @@ class GroupUser extends LdapTool {
 			}
 		}
 		return memberData.numberOfMembers
+	}
+
+	searchGroup(groupCn) {
+		ldapFilter := Format("(&(objectclass={:s})(cn={:s}))"
+				, GroupUser.options.filterObjectClass, groupCn)
+		if (!GroupUser.ldapConnection.search(searchResult
+				, GroupUser.options.baseDn, ldapFilter
+				, Ldap.SCOPE_SUBTREE, ["member"]) == Ldap.LDAP_SUCCESS) {
+			throw Exception("error: "
+					. Ldap.err2String(GroupUser.ldapConnection.getLastError()))
+		}
+		return searchResult
 	}
 
 	processMembersOfGroup(memberData, groupCn, memberList) {
