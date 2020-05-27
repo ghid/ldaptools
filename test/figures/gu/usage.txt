@@ -14,6 +14,8 @@ Options
                           Hostname of the LDAP-Server (default=localhost)
     -p, --port <portnum>  Port number of the LDAP-Server (default=389)
     -i, --ignore-case     Ignore case when filtering results
+    --ignore-group <group-name>
+                          Do not resolve this group
     -l, --lower           Display result in lower case characters
     -u, --upper           Display result in upper case characters
     -r, --refs            Display relations

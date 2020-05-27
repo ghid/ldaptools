@@ -83,6 +83,10 @@ class GroupUser extends LdapTool {
 				, GroupUser.options, "ignoreCase"
 				, "Ignore case when filtering results", OptParser.OPT_NEG
 				, GroupUser.options.ignoreCase, GroupUser.options.ignoreCase))
+		op.add(new OptParser.String(0, "ignore-group"
+				, GroupUser.options, "ignoreGroup", "group-name"
+				, "Do not resolve this group"
+				, OptParser.OPT_ARG | OptParser.OPT_MULTIPLE))
 		op.add(new OptParser.Boolean("l", "lower"
 				, GroupUser.options, "lower"
 				, "Display result in lower case characters"))
@@ -155,6 +159,9 @@ class GroupUser extends LdapTool {
 	}
 
 	membersOfGroupsAndSubGroups(groupCn, memberData) {
+		if (GroupUser.isGroupFilteredOut(groupCn)) {
+			return memberData.numberOfMembers
+		}
 		searchResult := GroupUser.searchGroup(groupCn)
 		numberOfEntriesFound := GroupUser.checkNumberOfEntries(searchResult)
 		loop %numberOfEntriesFound% {
@@ -176,6 +183,12 @@ class GroupUser extends LdapTool {
 			}
 		}
 		return memberData.numberOfMembers
+	}
+
+	isGroupFilteredOut(groupCn) {
+		return GroupUser.options.ignoreGroup.count() > 0
+				&& Arrays.filter(GroupUser.options.ignoreGroup
+				, String.equalsString.bind(groupCn)).count() > 0
 	}
 
 	searchGroup(groupCn) {
